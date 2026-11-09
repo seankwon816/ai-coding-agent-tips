@@ -1,0 +1,28 @@
+name: Suggest a tip
+description: A fix that saved you time with an AI coding agent
+labels: ["tip"]
+body:
+  - type: input
+    id: tool
+    attributes:
+      label: Tool and version
+      placeholder: "Claude Code 2.1.x, Codex CLI 0.16x, Cursor 1.x, an MCP server..."
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What goes wrong
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: The fix (paste the config, rule, or command)
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Link to the official doc or changelog that backs it

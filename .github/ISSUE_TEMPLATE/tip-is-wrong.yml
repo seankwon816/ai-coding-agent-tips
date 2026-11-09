@@ -1,0 +1,16 @@
+name: A tip is wrong or out of date
+description: Tell us which tip broke and on what version
+labels: ["fix"]
+body:
+  - type: input
+    id: tip
+    attributes:
+      label: Which tip
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and on which version
+    validations:
+      required: true
