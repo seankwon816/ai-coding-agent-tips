@@ -1,7 +1,5 @@
 # AI Coding Agent Tips
 
-![AI Coding Agent Tips](assets/banner.png)
-
 Small, copy-paste fixes for AI coding agents: Claude Code, OpenAI Codex CLI, Cursor, MCP servers, and the setups around them. Each tip is checked against the official docs for the version it names.
 
 ## Tips
