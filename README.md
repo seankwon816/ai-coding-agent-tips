@@ -1,6 +1,6 @@
-# Claude Code & Codex Tips
+# AI Coding Agent Tips
 
-Small, copy-paste fixes for Claude Code and OpenAI Codex CLI. Each tip is checked against the official docs for the version it names.
+Small, copy-paste fixes for AI coding agents: Claude Code, OpenAI Codex CLI, Cursor, MCP servers, and the setups around them. Each tip is checked against the official docs for the version it names.
 
 ## Tips
 
