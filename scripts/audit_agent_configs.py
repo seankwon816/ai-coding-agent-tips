@@ -7,6 +7,7 @@ Checks local project configuration files (read-only) for:
 3. Dockerfile COPY . . / ADD . . builds lacking .claude/ exclusions in .dockerignore
 4. CLAUDE.local.md silently shadowing a shared AGENTS.md without @AGENTS.md
 5. Codebase-ownership prompts in CLAUDE.md/AGENTS.md and 0.0.0.0 HTTP binds in .mcp.json
+6. Blocking Claude Code hooks using non-blocking exit 1 or out-of-range autoCompactWindow values
 
 Usage:
   python3 scripts/audit_agent_configs.py [PATH] [--json]
@@ -46,6 +47,20 @@ OWNERSHIP_RE = re.compile(
     re.I,
 )
 DOCKER_COPY_DOT_RE = re.compile(r"(?im)^\s*(?:COPY|ADD)(?:\s+--[^\s=]+=\S+)*\s+\.(?:\s|$)")
+BLOCKING_HOOK_EVENTS = (
+    "PreToolUse",
+    "UserPromptSubmit",
+    "Stop",
+    "SubagentStop",
+    "TaskCompleted",
+    "TaskCreated",
+    "TeammateIdle",
+    "ConfigChange",
+    "ElicitationResult",
+)
+HOOK_EXIT1_RE = re.compile(r"(?:^|[;&|]\s*|\bthen\s+)exit\s+1\b")
+HOOK_EXIT2_RE = re.compile(r"\bexit\s+2\b")
+COMPACT_ENV_RE = re.compile(r"^(\d+)([kKmM])?$")
 
 
 @dataclass
@@ -108,12 +123,108 @@ def _iter_dockerfiles(root: Path) -> Iterable[Path]:
             yield path
 
 
+def _is_valid_compact_window_num(val: object) -> bool:
+    return isinstance(val, (int, float)) and not isinstance(val, bool) and 100000 <= val <= 1000000
+
+
+def _is_valid_compact_env(raw: object) -> bool:
+    if not isinstance(raw, str):
+        return False
+    m = COMPACT_ENV_RE.match(raw.strip())
+    if not m:
+        return False
+    tokens = int(m.group(1))
+    suffix = (m.group(2) or "").lower()
+    if suffix == "k":
+        tokens *= 1000
+    elif suffix == "m":
+        tokens *= 1000000
+    return 100000 <= tokens <= 1000000
+
+
+def _check_claude_hooks(rel: str, parsed: dict[str, object], findings: list[Finding]) -> None:
+    hooks = parsed.get("hooks")
+    if not isinstance(hooks, dict):
+        return
+    for event in BLOCKING_HOOK_EVENTS:
+        entries = hooks.get(event)
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            nested = entry.get("hooks")
+            hook_objs = nested if isinstance(nested, list) else ([entry] if "command" in entry else [])
+            for hook in hook_objs:
+                if not isinstance(hook, dict) or hook.get("type", "command") != "command":
+                    continue
+                if hook.get("onFailure") == "block":
+                    continue
+                cmd = hook.get("command")
+                if not isinstance(cmd, str):
+                    continue
+                if HOOK_EXIT1_RE.search(cmd) and not HOOK_EXIT2_RE.search(cmd):
+                    findings.append(
+                        Finding(
+                            code="HOOK_EXIT1_NONBLOCKING",
+                            severity="HIGH",
+                            file=rel,
+                            summary=f"{event} command hook uses 'exit 1' without 'exit 2' or onFailure:'block', so Claude Code treats failures as non-blocking errors.",
+                            fix="Replace 'exit 1' with '1>&2 || exit 2' (or set onFailure to 'block') so failing gates stop the action.",
+                        )
+                    )
+
+
+def _check_claude_compact_window(rel: str, parsed: dict[str, object], findings: list[Finding]) -> None:
+    if "autoCompactWindow" in parsed and not _is_valid_compact_window_num(parsed["autoCompactWindow"]):
+        val = parsed["autoCompactWindow"]
+        findings.append(
+            Finding(
+                code="INVALID_AUTO_COMPACT_WINDOW",
+                severity="MEDIUM",
+                file=rel,
+                summary=f"autoCompactWindow={val!r} is outside Claude Code's valid 100000..1000000 token range.",
+                fix="Set autoCompactWindow to a token count between 100000 and 1000000 (for example 400000).",
+            )
+        )
+    model_settings = parsed.get("modelSettings")
+    if isinstance(model_settings, dict):
+        for model_name, cfg in model_settings.items():
+            if not isinstance(cfg, dict) or "autoCompactWindow" not in cfg:
+                continue
+            val = cfg["autoCompactWindow"]
+            if val != "auto" and not _is_valid_compact_window_num(val):
+                findings.append(
+                    Finding(
+                        code="INVALID_AUTO_COMPACT_WINDOW",
+                        severity="MEDIUM",
+                        file=rel,
+                        summary=f"modelSettings.{model_name}.autoCompactWindow={val!r} must be 'auto' or 100000..1000000 tokens.",
+                        fix="Use 'auto' or an integer token count between 100000 and 1000000.",
+                    )
+                )
+    env_cfg = parsed.get("env")
+    if isinstance(env_cfg, dict) and "CLAUDE_CODE_AUTO_COMPACT_WINDOW" in env_cfg:
+        raw_env = env_cfg["CLAUDE_CODE_AUTO_COMPACT_WINDOW"]
+        if not _is_valid_compact_env(raw_env):
+            findings.append(
+                Finding(
+                    code="INVALID_AUTO_COMPACT_WINDOW",
+                    severity="MEDIUM",
+                    file=rel,
+                    summary=f"env.CLAUDE_CODE_AUTO_COMPACT_WINDOW={raw_env!r} is invalid or outside 100000..1000000 (bare numbers mean raw tokens, not thousands).",
+                    fix="Set CLAUDE_CODE_AUTO_COMPACT_WINDOW to '400000' or '400k'.",
+                )
+            )
+
+
 def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
     for rel in (".claude/settings.local.json", ".claude/settings.json"):
         cfg_path = root / rel
         if not cfg_path.is_file():
             continue
         raw_text = cfg_path.read_text(encoding="utf-8", errors="ignore")
+        parsed: object = None
         strings_to_scan: list[str]
         try:
             parsed = json.loads(raw_text)
@@ -124,6 +235,10 @@ def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
                 strings_to_scan = list(_collect_strings(parsed))
         except Exception:
             strings_to_scan = raw_text.splitlines()
+
+        if isinstance(parsed, dict):
+            _check_claude_hooks(rel, parsed, findings)
+            _check_claude_compact_window(rel, parsed, findings)
 
         hit_labels: list[str] = []
         redacted_examples: list[str] = []
