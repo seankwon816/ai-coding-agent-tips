@@ -30,7 +30,7 @@ python3 scripts/audit_agent_configs.py .
 
 - https://code.claude.com/docs/en/model-config: "A number with no suffix is read as that many tokens, so `CLAUDE_CODE_AUTO_COMPACT_WINDOW=200` means 200 tokens even though `/autocompact 200` means 200,000."
 - https://code.claude.com/docs/en/settings-reference: "Set how full the context window gets before Claude Code compacts automatically."
-- https://code.claude.com/docs/en/env-vars: "Set the auto-compact window, how full the context gets before compaction, from `100000` to `1000000` tokens."
+- https://code.claude.com/docs/en/env-vars: "Set the auto-compact window, which is how full the context gets before compaction, to a token count of `100000` or more."
 - https://code.claude.com/docs/en/costs: "compacting a large context is itself a large request."
 - https://raw.githubusercontent.com/localixai/tokendoctor/main/README.md: "On models with a 1M window, Claude Code compacts only near 967K tokens, so the end of a long session is the expensive part."
 - https://raw.githubusercontent.com/localixai/tokendoctor/main/README.md: "So I set a 400K window and Sonnet for subagents. Comparing the month before with the week after, about 23K and 19K main-thread requests, context per request went from 412K to 219K and cost per request fell 38% at API list prices."

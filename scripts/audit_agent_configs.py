@@ -6,7 +6,7 @@ Checks local project configuration files (read-only) for:
 2. Missing .claude/ exclusions in .gitignore when local Claude settings exist
 3. Dockerfile COPY . . / ADD . . builds lacking .claude/ exclusions in .dockerignore
 4. CLAUDE.local.md silently shadowing a shared AGENTS.md without @AGENTS.md
-5. Codebase-ownership prompts in CLAUDE.md/AGENTS.md and 0.0.0.0 HTTP binds in .mcp.json
+5. Codebase-ownership prompts in CLAUDE.md/AGENTS.md and wildcard/inline-secret/unpinned-npx traps in .mcp.json
 6. Blocking Claude Code hooks using non-blocking exit 1 or out-of-range autoCompactWindow values
 
 Usage:
@@ -61,6 +61,8 @@ BLOCKING_HOOK_EVENTS = (
 HOOK_EXIT1_RE = re.compile(r"(?:^|[;&|]\s*|\bthen\s+)exit\s+1\b")
 HOOK_EXIT2_RE = re.compile(r"\bexit\s+2\b")
 COMPACT_ENV_RE = re.compile(r"^(\d+)([kKmM])?$")
+MCP_CREDENTIAL_KEY_RE = re.compile(r"(?:API[-_]?KEY|TOKEN|SECRET|PASSWORD|AUTHORIZATION)$", re.I)
+PLACEHOLDER_SECRET_RE = re.compile(r"^(?:\$\{[^}]+\}|\$[A-Z0-9_]+|<[^>]+>|(?:YOUR|REPLACE|EXAMPLE|DUMMY|TEST)[-_A-Z0-9]*|x{4,})$", re.I)
 
 
 @dataclass
@@ -292,6 +294,96 @@ def _check_ignore_files(root: Path, findings: list[Finding]) -> None:
             )
 
 
+def _is_pinned_npm_spec(pkg: str) -> bool:
+    if pkg.startswith((".", "/", "~", "http://", "https://", "git+", "file:")):
+        return True
+    if pkg.startswith("@"):
+        return "/" in pkg and "@" in pkg.split("/", 1)[1]
+    return "@" in pkg
+
+
+def _check_mcp_file(rel: str, fp: Path, findings: list[Finding]) -> None:
+    txt = fp.read_text(encoding="utf-8", errors="ignore")
+    if "0.0.0.0" in txt:
+        findings.append(
+            Finding(
+                code="MCP_WILDCARD_BIND",
+                severity="HIGH",
+                file=rel,
+                summary=f"{rel} references wildcard address 0.0.0.0 instead of loopback.",
+                fix="Bind local HTTP MCP servers strictly to 127.0.0.1 and validate Origin headers.",
+            )
+        )
+
+    parsed: object = None
+    try:
+        parsed = json.loads(txt)
+        strings_to_scan = list(_collect_strings(parsed))
+    except Exception:
+        strings_to_scan = txt.splitlines()
+
+    hit_labels: list[str] = []
+    redacted_examples: list[str] = []
+    matched_secret_vals: set[str] = set()
+    for raw_val in strings_to_scan:
+        for label, rx in SECRET_PATTERNS:
+            m = rx.search(raw_val)
+            if m:
+                hit_labels.append(label)
+                redacted_examples.append(redact_match(m.group(0)))
+                matched_secret_vals.add(raw_val.strip())
+
+    servers = parsed.get("mcpServers") if isinstance(parsed, dict) else None
+    if isinstance(servers, dict):
+        for srv_name, cfg in servers.items():
+            if not isinstance(cfg, dict):
+                continue
+            for block_name in ("env", "headers"):
+                block = cfg.get(block_name)
+                if not isinstance(block, dict):
+                    continue
+                for k, v in block.items():
+                    if not isinstance(k, str) or not isinstance(v, str):
+                        continue
+                    v_clean = v.strip()
+                    if not v_clean or v_clean in matched_secret_vals:
+                        continue
+                    if MCP_CREDENTIAL_KEY_RE.search(k.strip()) and not PLACEHOLDER_SECRET_RE.match(v_clean):
+                        hit_labels.append(f"{srv_name}.{block_name}.{k}")
+                        redacted_examples.append(redact_match(v_clean))
+
+            cmd = str(cfg.get("command") or "").strip()
+            cmd_name = Path(cmd).name.lower() if cmd else ""
+            args = cfg.get("args")
+            if cmd_name in ("npx", "npx.cmd") and isinstance(args, list):
+                str_args = [a for a in args if isinstance(a, str)]
+                if any(a in ("-y", "--yes") for a in str_args):
+                    pkgs = [a for a in str_args if not a.startswith("-")]
+                    if pkgs and not _is_pinned_npm_spec(pkgs[0]):
+                        findings.append(
+                            Finding(
+                                code="MCP_UNPINNED_NPX",
+                                severity="MEDIUM",
+                                file=rel,
+                                summary=f"{rel} server '{srv_name}' launches '{pkgs[0]}' via npx -y without a pinned @version.",
+                                fix="Pin exact package versions (pkg@1.2.3) or isolate sessions with managed-mcp.json and --strict-mcp-config.",
+                            )
+                        )
+
+    if hit_labels:
+        uniq_labels = ", ".join(dict.fromkeys(hit_labels[:4]))
+        uniq_samples = ", ".join(dict.fromkeys(redacted_examples[:3]))
+        findings.append(
+            Finding(
+                code="MCP_INLINE_SECRET",
+                severity="HIGH",
+                file=rel,
+                summary=f"Found {len(hit_labels)} inline credential(s) in {rel} ({uniq_labels}; e.g. {uniq_samples}).",
+                fix="Move static tokens out of .mcp.json env/headers into headersHelper scripts or ${ENV_VAR} references.",
+            )
+        )
+
+
 def _check_prompt_and_mcp_files(root: Path, findings: list[Finding]) -> None:
     local_md = root / "CLAUDE.local.md"
     agents_md = root / "AGENTS.md"
@@ -327,19 +419,8 @@ def _check_prompt_and_mcp_files(root: Path, findings: list[Finding]) -> None:
 
     for rel in (".mcp.json", "mcp.json"):
         fp = root / rel
-        if not fp.is_file():
-            continue
-        txt = fp.read_text(encoding="utf-8", errors="ignore")
-        if "0.0.0.0" in txt:
-            findings.append(
-                Finding(
-                    code="MCP_WILDCARD_BIND",
-                    severity="HIGH",
-                    file=rel,
-                    summary=f"{rel} references wildcard address 0.0.0.0 instead of loopback.",
-                    fix="Bind local HTTP MCP servers strictly to 127.0.0.1 and validate Origin headers.",
-                )
-            )
+        if fp.is_file():
+            _check_mcp_file(rel, fp, findings)
 
 
 def audit_directory(target: Path | str) -> dict[str, object]:
