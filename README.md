@@ -4,7 +4,7 @@ Zero-dependency local security auditor, drop-in `AGENTS.md` / `CLAUDE.md` rules,
 
 ## 1-Command Local Audit (Python 3 stdlib, read-only)
 
-Scan a project for inline credentials inside `.claude/settings.local.json` and `.mcp.json`, unpinned `npx -y` MCP servers, missing `.gitignore` / `.dockerignore` exclusions (`COPY . .` leaks), non-blocking `exit 1` hook rules, out-of-range `autoCompactWindow` settings, shadowed `AGENTS.md` rules, codebase-ownership prompt bloat, and `0.0.0.0` MCP bindings:
+Scan a project for inline credentials inside `.claude/settings.local.json` and `.mcp.json`, unpinned `npx -y` MCP servers, missing `.gitignore` / `.dockerignore` exclusions (`COPY . .` leaks), non-blocking `exit 1` hook rules, out-of-range `autoCompactWindow` settings, unmirrored sandbox `denyRead` paths and unsandboxed escape hatches, shadowed `AGENTS.md` rules, codebase-ownership prompt bloat, and `0.0.0.0` MCP bindings:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/seankwon816/ai-coding-agent-tips/main/scripts/audit_agent_configs.py | python3 - .
@@ -37,8 +37,11 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Block unfinished agent edits with Stop hook exit code 2 before PR review](tips/stop-hook-exit-2-pre-review-gates.md) | AI coding PRs are 154% larger and carry up to 2.74x more security flaws, stalling human code review |
 | MCP | [Lock down MCP servers with headersHelper, allowlists, and strict-mcp-config](tips/mcp-lockdown-headershelper-and-strict-config.md) | In MCPTox tests across 45 live MCP servers, hidden rules in tool descriptions reached 72.8% attack success |
 | Claude Code | [Bound headless agent loops with --max-turns and --max-budget-usd](tips/cap-headless-runs-with-max-turns.md) | Across 27,280 coding agent runs, step count drove inference cost while starting prompt size barely mattered |
+| Claude Code | [Mirror sandbox denyRead rules in permissions.deny and disable unsandboxed retries](tips/sandbox-denyread-and-escape-hatch-lockdown.md) | `sandbox.filesystem.denyRead` blocks bash only, leaving built-in `Read` and unsandboxed retries open |
+| Python / Security | [Audit site-packages .pth startup hooks in coding-agent Python environments](tips/audit-python-pth-startup-hooks.md) | Compromised Python wheels (`agent-framework` 1.26.1/1.26.2) harvest keys via `.pth` hooks even without import |
+| Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-for-agent-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 
-_Last checked: 2026-11-18_
+_Last checked: 2026-11-19_
 
 ## How each tip is written
 

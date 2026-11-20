@@ -8,6 +8,7 @@ Checks local project configuration files (read-only) for:
 4. CLAUDE.local.md silently shadowing a shared AGENTS.md without @AGENTS.md
 5. Codebase-ownership prompts in CLAUDE.md/AGENTS.md and wildcard/inline-secret/unpinned-npx traps in .mcp.json
 6. Blocking Claude Code hooks using non-blocking exit 1 or out-of-range autoCompactWindow values
+7. Claude Code sandbox gaps: unmirrored filesystem.denyRead paths (bypassed by built-in Read), allowUnsandboxedCommands/excludedCommands escape hatches, and bypassPermissions defaults
 
 Usage:
   python3 scripts/audit_agent_configs.py [PATH] [--json]
@@ -220,6 +221,106 @@ def _check_claude_compact_window(rel: str, parsed: dict[str, object], findings: 
             )
 
 
+def _normalize_deny_path(raw: str) -> str:
+    p = raw.strip()
+    for suffix in ("/**", "/*", "/"):
+        if p.endswith(suffix) and len(p) > len(suffix):
+            p = p[: -len(suffix)]
+    return p
+
+
+def _read_deny_covers(read_patterns: list[str], target: str) -> bool:
+    norm_target = _normalize_deny_path(target)
+    if not norm_target:
+        return True
+    for pat in read_patterns:
+        raw_pat = pat.strip()
+        norm_pat = _normalize_deny_path(raw_pat)
+        if norm_pat == norm_target:
+            return True
+        if raw_pat.endswith(("/**", "/*")) and norm_target.startswith(norm_pat + "/"):
+            return True
+    return False
+
+
+def _check_claude_sandbox(rel: str, parsed: dict[str, object], findings: list[Finding]) -> None:
+    perms = parsed.get("permissions")
+    read_deny_patterns: list[str] = []
+    if isinstance(perms, dict):
+        if perms.get("defaultMode") == "bypassPermissions":
+            findings.append(
+                Finding(
+                    code="PERMISSIONS_BYPASS_DEFAULT",
+                    severity="HIGH",
+                    file=rel,
+                    summary=f"{rel} sets permissions.defaultMode='bypassPermissions', skipping prompts for built-in tools and unsandboxed retries.",
+                    fix="Reserve bypassPermissions for ephemeral containers/VMs; locally use sandbox + autoAllowBashIfSandboxed or dontAsk.",
+                )
+            )
+        deny_list = perms.get("deny")
+        if isinstance(deny_list, list):
+            for rule in deny_list:
+                if isinstance(rule, str):
+                    m = re.match(r"^Read\((.+)\)$", rule.strip())
+                    if m:
+                        read_deny_patterns.append(m.group(1).strip())
+
+    sandbox = parsed.get("sandbox")
+    if not isinstance(sandbox, dict):
+        return
+
+    if sandbox.get("enabled") is True and sandbox.get("allowUnsandboxedCommands") is not False:
+        findings.append(
+            Finding(
+                code="SANDBOX_UNSANDBOXED_FALLBACK",
+                severity="HIGH",
+                file=rel,
+                summary=f"{rel} enables sandbox without setting allowUnsandboxedCommands: false, allowing blocked commands to retry outside the sandbox.",
+                fix="Set sandbox.allowUnsandboxedCommands to false (and failIfUnavailable to true) in managed or user settings.",
+            )
+        )
+
+    excluded = sandbox.get("excludedCommands")
+    if isinstance(excluded, list):
+        excl_items = [str(c).strip() for c in excluded if isinstance(c, str) and c.strip()]
+        if excl_items:
+            preview = ", ".join(excl_items[:4])
+            findings.append(
+                Finding(
+                    code="SANDBOX_EXCLUDED_COMMANDS",
+                    severity="MEDIUM",
+                    file=rel,
+                    summary=f"{rel} lists sandbox.excludedCommands ({preview}), which bypass OS sandbox boundaries completely.",
+                    fix="Remove broad entries from sandbox.excludedCommands or lock sandbox policy in managed settings.",
+                )
+            )
+
+    denied_paths: list[str] = []
+    fs_cfg = sandbox.get("filesystem")
+    if isinstance(fs_cfg, dict) and isinstance(fs_cfg.get("denyRead"), list):
+        for p in fs_cfg["denyRead"]:
+            if isinstance(p, str) and p.strip():
+                denied_paths.append(p.strip())
+    cred_cfg = sandbox.get("credentials")
+    if isinstance(cred_cfg, dict) and isinstance(cred_cfg.get("files"), list):
+        for item in cred_cfg["files"]:
+            if isinstance(item, dict) and item.get("mode") == "deny" and isinstance(item.get("path"), str) and item["path"].strip():
+                denied_paths.append(item["path"].strip())
+
+    unmirrored = [p for p in dict.fromkeys(denied_paths) if not _read_deny_covers(read_deny_patterns, p)]
+    if unmirrored:
+        preview = ", ".join(unmirrored[:4])
+        findings.append(
+            Finding(
+                code="SANDBOX_DENYREAD_UNMIRRORED",
+                severity="HIGH",
+                file=rel,
+                summary=f"{rel} blocks bash reads for {preview} in sandbox config without matching Read(...) rules in permissions.deny (built-in Read runs outside the sandbox).",
+                fix="Mirror every sandbox denyRead path in permissions.deny (for example 'Read(~/.ssh/**)' and 'Read(~/.aws/**)').",
+            )
+        )
+
+
 def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
     for rel in (".claude/settings.local.json", ".claude/settings.json"):
         cfg_path = root / rel
@@ -241,6 +342,7 @@ def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
         if isinstance(parsed, dict):
             _check_claude_hooks(rel, parsed, findings)
             _check_claude_compact_window(rel, parsed, findings)
+            _check_claude_sandbox(rel, parsed, findings)
 
         hit_labels: list[str] = []
         redacted_examples: list[str] = []
