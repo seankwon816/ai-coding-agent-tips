@@ -9,6 +9,7 @@ Checks local project configuration files (read-only) for:
 5. Codebase-ownership prompts in CLAUDE.md/AGENTS.md and wildcard/inline-secret/unpinned-npx traps in .mcp.json
 6. Blocking Claude Code hooks using non-blocking exit 1 or out-of-range autoCompactWindow values
 7. Claude Code sandbox gaps: unmirrored filesystem.denyRead paths (bypassed by built-in Read), allowUnsandboxedCommands/excludedCommands escape hatches, and bypassPermissions defaults
+8. Blanket wildcard permissions.allow rules (Bash, Bash(*), WebFetch(*), mcp__*, *) that remove action approval gates
 
 Usage:
   python3 scripts/audit_agent_configs.py [PATH] [--json]
@@ -63,6 +64,9 @@ HOOK_EXIT1_RE = re.compile(r"(?:^|[;&|]\s*|\bthen\s+)exit\s+1\b")
 HOOK_EXIT2_RE = re.compile(r"\bexit\s+2\b")
 COMPACT_ENV_RE = re.compile(r"^(\d+)([kKmM])?$")
 MCP_CREDENTIAL_KEY_RE = re.compile(r"(?:API[-_]?KEY|TOKEN|SECRET|PASSWORD|AUTHORIZATION)$", re.I)
+BROAD_ALLOW_WILDCARD_RE = re.compile(
+    r"^(?:\*|Bash(?:\((?:\*|\*:\*|:\*)\))?|WebFetch(?:\((?:\*|domain:\*)\))?|mcp__\*+(?:__\*+)?)$"
+)
 PLACEHOLDER_SECRET_RE = re.compile(r"^(?:\$\{[^}]+\}|\$[A-Z0-9_]+|<[^>]+>|(?:YOUR|REPLACE|EXAMPLE|DUMMY|TEST)[-_A-Z0-9]*|x{4,})$", re.I)
 
 
@@ -257,6 +261,24 @@ def _check_claude_sandbox(rel: str, parsed: dict[str, object], findings: list[Fi
                     fix="Reserve bypassPermissions for ephemeral containers/VMs; locally use sandbox + autoAllowBashIfSandboxed or dontAsk.",
                 )
             )
+        allow_list = perms.get("allow")
+        if isinstance(allow_list, list):
+            broad_rules = [
+                rule.strip()
+                for rule in allow_list
+                if isinstance(rule, str) and BROAD_ALLOW_WILDCARD_RE.match(rule.strip())
+            ]
+            if broad_rules:
+                preview = ", ".join(dict.fromkeys(broad_rules[:4]))
+                findings.append(
+                    Finding(
+                        code="PERMISSIONS_BROAD_ALLOW_WILDCARD",
+                        severity="HIGH",
+                        file=rel,
+                        summary=f"{rel} grants blanket permissions.allow wildcard(s) ({preview}), letting untrusted tool data trigger actions without confirmation.",
+                        fix="Replace blanket wildcards with scoped permissions.allow entries and enforce permissions.ask or permissions.deny gates for shell, network, and MCP side effects.",
+                    )
+                )
         deny_list = perms.get("deny")
         if isinstance(deny_list, list):
             for rule in deny_list:

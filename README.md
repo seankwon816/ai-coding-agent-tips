@@ -4,7 +4,7 @@ Zero-dependency local security auditor, drop-in `AGENTS.md` / `CLAUDE.md` rules,
 
 ## 1-Command Local Audit (Python 3 stdlib, read-only)
 
-Scan a project for inline credentials inside `.claude/settings.local.json` and `.mcp.json`, unpinned `npx -y` MCP servers, missing `.gitignore` / `.dockerignore` exclusions (`COPY . .` leaks), non-blocking `exit 1` hook rules, out-of-range `autoCompactWindow` settings, unmirrored sandbox `denyRead` paths and unsandboxed escape hatches, shadowed `AGENTS.md` rules, codebase-ownership prompt bloat, and `0.0.0.0` MCP bindings:
+Scan a project for inline credentials inside `.claude/settings.local.json` and `.mcp.json`, unpinned `npx -y` MCP servers, missing `.gitignore` / `.dockerignore` exclusions (`COPY . .` leaks), non-blocking `exit 1` hook rules, out-of-range `autoCompactWindow` settings, unmirrored sandbox `denyRead` paths and unsandboxed escape hatches, blanket `permissions.allow` wildcards, shadowed `AGENTS.md` rules, codebase-ownership prompt bloat, and `0.0.0.0` MCP bindings:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/seankwon816/ai-coding-agent-tips/main/scripts/audit_agent_configs.py | python3 - .
@@ -41,7 +41,11 @@ python3 scripts/audit_agent_configs.py .
 | Python / Security | [Audit site-packages .pth startup hooks in coding-agent Python environments](tips/audit-python-pth-startup-hooks.md) | Compromised Python wheels (`agent-framework` 1.26.1/1.26.2) harvest keys via `.pth` hooks even without import |
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 
-_Last checked: 2026-11-19_
+| Claude Code | [Enforce hard tool and approval gates instead of relying on prompt-injection filters](tips/gate-agent-actions-against-data-only-injection.md) | Prompt-injection detectors look for adversarial instructions inside tool results, not plausible numbers |
+
+| MCP | [Route all MCP stdio server logs to stderr so stdout carries JSON-RPC only](tips/mcp-stdio-route-logs-to-stderr.md) | In an MCP `stdio` server, all client-server traffic shares a single newline-delimited `stdout` pipe with no... |
+
+_Last checked: 2026-11-20_
 
 ## How each tip is written
 
