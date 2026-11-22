@@ -4,7 +4,7 @@ Zero-dependency local security auditor, drop-in `AGENTS.md` / `CLAUDE.md` rules,
 
 ## 1-Command Local Audit (Python 3 stdlib, read-only)
 
-Scan a project for inline credentials inside `.claude/settings.local.json` and `.mcp.json`, unpinned `npx -y` MCP servers, missing `.gitignore` / `.dockerignore` exclusions (`COPY . .` leaks), non-blocking `exit 1` hook rules, out-of-range `autoCompactWindow` settings, unmirrored sandbox `denyRead` paths and unsandboxed escape hatches, blanket `permissions.allow` wildcards, shadowed `AGENTS.md` rules, codebase-ownership prompt bloat, and `0.0.0.0` MCP bindings:
+Scan a project for inline credentials inside `.claude/settings.local.json` and `.mcp.json`, unpinned `npx -y` MCP servers, missing `.gitignore` / `.dockerignore` exclusions (`COPY . .` leaks), non-blocking `exit 1` hook rules, out-of-range `autoCompactWindow` settings, unmirrored sandbox `denyRead` paths and unsandboxed escape hatches, blanket `permissions.allow` wildcards, `enableAllProjectMcpServers: true` auto-approvals, shadowed `AGENTS.md` rules, codebase-ownership prompt bloat, and `0.0.0.0` MCP bindings:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/seankwon816/ai-coding-agent-tips/main/scripts/audit_agent_configs.py | python3 - .
@@ -40,12 +40,16 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Mirror sandbox denyRead rules in permissions.deny and disable unsandboxed retries](tips/sandbox-denyread-and-escape-hatch-lockdown.md) | `sandbox.filesystem.denyRead` blocks bash only, leaving built-in `Read` and unsandboxed retries open |
 | Python / Security | [Audit site-packages .pth startup hooks in coding-agent Python environments](tips/audit-python-pth-startup-hooks.md) | Compromised Python wheels (`agent-framework` 1.26.1/1.26.2) harvest keys via `.pth` hooks even without import |
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
-
 | Claude Code | [Enforce hard tool and approval gates instead of relying on prompt-injection filters](tips/gate-agent-actions-against-data-only-injection.md) | Prompt-injection detectors look for adversarial instructions inside tool results, not plausible numbers |
-
 | MCP | [Route all MCP stdio server logs to stderr so stdout carries JSON-RPC only](tips/mcp-stdio-route-logs-to-stderr.md) | In an MCP `stdio` server, all client-server traffic shares a single newline-delimited `stdout` pipe with no... |
 
-_Last checked: 2026-11-20_
+| Claude Code | [Audit MCP tools/list for credential exposure and avoid enableAllProjectMcpServers](tips/audit-mcp-tools-list-credential-exposure.md) | Teams often scan MCP servers only for hidden prompt-injection strings and stop there |
+
+| Any agent | [Isolate coding-agent containers with --network none, --read-only, and seccomp](tips/isolate-agent-containers-network-seccomp-imds.md) | Running an open-weight coding model on your own hardware controls where the weights live, not what shell co... |
+
+| MCP | [Trim agent tool results to a 5-field allowlist to raise solve rate and cut token spend](tips/trim-agent-tool-results-field-allowlist.md) | Returning raw REST or MCP JSON payloads from list tools floods the agent's context with URLs, avatar object... |
+
+_Last checked: 2026-11-21_
 
 ## How each tip is written
 

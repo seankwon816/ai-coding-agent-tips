@@ -10,6 +10,7 @@ Checks local project configuration files (read-only) for:
 6. Blocking Claude Code hooks using non-blocking exit 1 or out-of-range autoCompactWindow values
 7. Claude Code sandbox gaps: unmirrored filesystem.denyRead paths (bypassed by built-in Read), allowUnsandboxedCommands/excludedCommands escape hatches, and bypassPermissions defaults
 8. Blanket wildcard permissions.allow rules (Bash, Bash(*), WebFetch(*), mcp__*, *) that remove action approval gates
+9. Auto-approval of all project MCP servers (enableAllProjectMcpServers: true) without reviewing tools/list
 
 Usage:
   python3 scripts/audit_agent_configs.py [PATH] [--json]
@@ -365,6 +366,16 @@ def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
             _check_claude_hooks(rel, parsed, findings)
             _check_claude_compact_window(rel, parsed, findings)
             _check_claude_sandbox(rel, parsed, findings)
+            if parsed.get("enableAllProjectMcpServers") is True:
+                findings.append(
+                    Finding(
+                        code="MCP_AUTO_APPROVE_ALL_PROJECT_SERVERS",
+                        severity="HIGH",
+                        file=rel,
+                        summary=f"{rel} sets enableAllProjectMcpServers=true, auto-approving every server in .mcp.json without prompting to inspect tools/list.",
+                        fix="Set enableAllProjectMcpServers to false (or remove it) and list vetted server names explicitly under enabledMcpjsonServers.",
+                    )
+                )
 
         hit_labels: list[str] = []
         redacted_examples: list[str] = []
