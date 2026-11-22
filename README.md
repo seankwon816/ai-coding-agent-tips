@@ -48,7 +48,7 @@ python3 scripts/audit_agent_configs.py .
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
 
-## Verified Field Fixes (22)
+## Verified Field Fixes (23)
 
 ### Security & Sandboxing
 
@@ -79,6 +79,7 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Run the Explore subagent on Haiku](tips/explore-subagent-on-haiku.md) | Codebase searches running on your biggest model |
 | Claude Code | [Cap 1M auto-compaction earlier when long sessions drive up token spend](tips/cap-1m-auto-compact-window.md) | On 1M-window models, waiting until ~967K tokens to compact pushes two thirds of spend into the tail |
 | Claude Code | [Bound headless agent loops with --max-turns and --max-budget-usd](tips/cap-headless-runs-with-max-turns.md) | Across 27,280 coding agent runs, step count drove inference cost while starting prompt size barely mattered |
+| Any agent | [Separate AI project memory with a three-layer setup](tips/separate-ai-project-memory-three-layer-setup.md) | Global AI memory loads into every conversation thread |
 
 ### Workflow, Git & Prompt Hygiene
 
@@ -92,7 +93,7 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Block unfinished agent edits with Stop hook exit code 2 before PR review](tips/stop-hook-exit-2-pre-review-gates.md) | AI coding PRs are 154% larger and carry up to 2.74x more security flaws, stalling human code review |
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 
-_Last checked: 2026-11-21_
+_Last checked: 2026-11-22_
 
 ## How each tip is written
 
