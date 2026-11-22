@@ -49,6 +49,8 @@ python3 scripts/audit_agent_configs.py .
 
 | MCP | [Trim agent tool results to a 5-field allowlist to raise solve rate and cut token spend](tips/trim-agent-tool-results-field-allowlist.md) | Returning raw REST or MCP JSON payloads from list tools floods the agent's context with URLs, avatar object... |
 
+| Any agent | [Audit AI email connectors against indirect prompt injection](tips/audit-ai-email-connectors-against-indirect-prompt-injection.md) | When you ask an AI assistant to summarize an email, calendar invite, or PDF, the model reads your prompt an... |
+
 _Last checked: 2026-11-21_
 
 ## How each tip is written
