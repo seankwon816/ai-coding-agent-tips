@@ -35,3 +35,7 @@ If an unexpected `.pth` import or an affected release (`agent-framework` `1.26.1
 - https://socket.dev/blog/agent-framework-pypi-package-compromised-with-credential-stealer: "The legitimate package initializer is restored byte-for-byte, so inspecting only agent_framework_meta/__init__.py misses this version."
 - https://socket.dev/blog/agent-framework-pypi-package-compromised-with-credential-stealer: "Avoid installing either version; if installed, remove them and rotate potentially exposed credentials."
 - https://docs.python.org/3/library/site.html: "For backward compatibility, lines starting with import (followed by space or tab) are executed with exec()"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

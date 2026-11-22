@@ -31,3 +31,7 @@ app.listen(3001, "127.0.0.1");
 - https://modelcontextprotocol.io/specification/2025-03-26/basic/transports: "Servers MUST validate the Origin header on all incoming connections to prevent DNS rebinding attacks"
 - https://modelcontextprotocol.io/specification/2025-03-26/basic/transports: "When running locally, servers SHOULD bind only to localhost (127.0.0.1) rather than all network interfaces (0.0.0.0)"
 - https://github.com/Ahany1440/mcp-auditor/blob/main/SURVEY.md: "6 repos can serve MCP over HTTP. 3 listen only on localhost by default. 3 listen on every network interface by default with no login"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

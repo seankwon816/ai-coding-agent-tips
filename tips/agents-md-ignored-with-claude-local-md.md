@@ -27,3 +27,7 @@ On versions before v2.1.285, use `agents-md@builtin` as the key. v2.1.285 and la
 - https://code.claude.com/docs/en/memory: "Because `CLAUDE.local.md` counts, adding one to keep your own uncommitted instructions in a project that relies on `AGENTS.md` stops Claude from reading `AGENTS.md` for you."
 - https://code.claude.com/docs/en/memory: "Claude Code reads the entry from `~/.claude/settings.json`, a `--settings` file, or managed settings, and ignores it in project and local settings files."
 - https://code.claude.com/docs/en/memory: "Before v2.1.285, the plugin's ID was `agents-md@builtin`, and Claude Code ignored an entry under `cc-plugin-agents-md@builtin`."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

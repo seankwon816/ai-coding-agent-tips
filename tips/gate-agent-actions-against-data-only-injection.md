@@ -51,3 +51,7 @@ python3 scripts/audit_agent_configs.py .
 - https://dev.to/edbrdi/can-a-plain-table-hijack-an-ai-agent-2pde: "What held in my tests were limits on what the model could do: a tool it wasn't allowed to call, an action someone had to approve."
 - https://code.claude.com/docs/en/permissions: "Rules are evaluated in order: deny, then ask, then allow. The first match in that order determines the outcome, and rule specificity doesn't change the order."
 - https://code.claude.com/docs/en/permissions: "PreToolUse hook decisions don't bypass permission rules. Claude Code evaluates deny and ask rules regardless of what a PreToolUse hook returns: a matching deny rule blocks the call, and a matching ask rule still prompts even when the hook returned"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

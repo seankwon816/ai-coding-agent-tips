@@ -35,3 +35,7 @@ python3 scripts/audit_agent_configs.py .
 - https://raw.githubusercontent.com/localixai/tokendoctor/main/README.md: "On models with a 1M window, Claude Code compacts only near 967K tokens, so the end of a long session is the expensive part."
 - https://raw.githubusercontent.com/localixai/tokendoctor/main/README.md: "So I set a 400K window and Sonnet for subagents. Comparing the month before with the week after, about 23K and 19K main-thread requests, context per request went from 412K to 219K and cost per request fell 38% at API list prices."
 - https://raw.githubusercontent.com/localixai/tokendoctor/main/README.md: "The catch is more summaries, and each is a pause: 79 seconds on average in my sessions."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

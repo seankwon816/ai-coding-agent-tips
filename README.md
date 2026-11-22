@@ -1,62 +1,109 @@
 # AI Coding Agent Tips & Config Auditor
 
+[![CI](https://github.com/seankwon816/ai-coding-agent-tips/actions/workflows/ci.yml/badge.svg)](https://github.com/seankwon816/ai-coding-agent-tips/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3 stdlib](https://img.shields.io/badge/Python-3.10%2B%20stdlib%20only-3776AB.svg)](scripts/audit_agent_configs.py)
+
 Zero-dependency local security auditor, drop-in `AGENTS.md` / `CLAUDE.md` rules, and doc-verified fixes for Claude Code, OpenAI Codex CLI, Cursor, and MCP servers. Every fix is verified word-for-word against official documentation or published studies.
 
 ## 1-Command Local Audit (Python 3 stdlib, read-only)
 
-Scan a project for inline credentials inside `.claude/settings.local.json` and `.mcp.json`, unpinned `npx -y` MCP servers, missing `.gitignore` / `.dockerignore` exclusions (`COPY . .` leaks), non-blocking `exit 1` hook rules, out-of-range `autoCompactWindow` settings, unmirrored sandbox `denyRead` paths and unsandboxed escape hatches, blanket `permissions.allow` wildcards, `enableAllProjectMcpServers: true` auto-approvals, shadowed `AGENTS.md` rules, codebase-ownership prompt bloat, and `0.0.0.0` MCP bindings:
+Run directly against any repository (zero installs, `exit 0` when clean, `1` when findings exist; supports `--json`):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/seankwon816/ai-coding-agent-tips/main/scripts/audit_agent_configs.py | python3 - .
 ```
 
-Or run from a local clone (`exit 0` when clean, `1` when findings exist; supports `--json`):
+Or run from a local clone:
 
 ```bash
 python3 scripts/audit_agent_configs.py .
 ```
 
+### Example output
+
+```text
+[FAIL] Audited /path/to/your-project (4 finding(s))
+  - [HIGH] MCP_AUTO_APPROVE_ALL_PROJECT_SERVERS (.claude/settings.local.json): .claude/settings.local.json sets enableAllProjectMcpServers=true, auto-approving every server in .mcp.json without prompting to inspect tools/list.
+    Fix: Set enableAllProjectMcpServers to false (or remove it) and list vetted server names explicitly under enabledMcpjsonServers.
+  - [HIGH] CLAUDE_LOCAL_INLINE_SECRET (.claude/settings.local.json): Found 2 inline credential pattern(s) (OpenAI/API key, Bearer/Authorization header; e.g. sk-p...abcd [REDACTED], Bear...abcd [REDACTED]).
+    Fix: Run /permissions in Claude Code, remove literal secret allow rules, and pass $ENV_VAR names instead.
+  - [HIGH] UNIGNORED_CLAUDE_LOCAL_SETTINGS (.gitignore): .claude/ exists without a .gitignore exclusion; future Option 2 rules can be committed by git add .
+    Fix: Add '.claude/settings.local.json' (or '.claude/') to .gitignore before staging changes.
+  - [MEDIUM] MCP_UNPINNED_NPX (.mcp.json): .mcp.json server 'docs' launches '@modelcontextprotocol/server-filesystem' via npx -y without a pinned @version.
+    Fix: Pin exact package versions (pkg@1.2.3) or isolate sessions with managed-mcp.json and --strict-mcp-config.
+```
+
+<details>
+<summary>What the auditor checks (16 built-in rules)</summary>
+
+- **Secrets & leak hygiene**: inline API keys/tokens in `.claude/settings*.json` and `.mcp.json` (redacted in output), missing `.claude/` in `.gitignore`, Dockerfile `COPY/ADD . .` without `.dockerignore` exclusions.
+- **Sandbox & approval gates**: `permissions.defaultMode: "bypassPermissions"`, blanket `permissions.allow` wildcards (`*`, `Bash(*)`, `WebFetch(*)`, `mcp__*`), `sandbox.filesystem.denyRead` not mirrored in `permissions.deny`, missing `allowUnsandboxedCommands: false`, broad `sandbox.excludedCommands`.
+- **MCP server safety**: `enableAllProjectMcpServers: true`, `0.0.0.0` wildcard bindings, unpinned `npx -y` packages without `@version`.
+- **Hooks, context & prompt hygiene**: blocking hooks using non-blocking `exit 1` instead of `exit 2`, out-of-range `autoCompactWindow` settings, `CLAUDE.local.md` shadowing `AGENTS.md` without `@AGENTS.md`, codebase-ownership phrasing that triggers unrequested refactors.
+
+</details>
+
 ## Drop-In Starter Rules
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
 
-## Verified Field Fixes
+## Verified Field Fixes (22)
+
+### Security & Sandboxing
 
 | Area | Fix | What it solves |
 |---|---|---|
-| Claude Code / Docker | [Inline API keys written by "Yes, and don't ask again"](tips/claude-local-settings-inline-secrets.md) | 31,088 GitHub secrets & 613 Docker Hub leaks from `.claude/settings.local.json` |
-| Claude / AGENTS.md | [Prompts claiming codebase ownership cause unrequested refactors](tips/codebase-ownership-causes-unrequested-refactors.md) | Ownership prompts raise unrequested code consolidation from under 10% to about 75% |
-| Any agent | [Split coding-agent commits into prep and logic phases](tips/split-agent-commits-two-phases.md) | Oversized agent diffs that mix renames and formatting into feature logic |
-| Claude Code | [AGENTS.md ignored when CLAUDE.local.md exists](tips/agents-md-ignored-with-claude-local-md.md) | A personal file silently turns off your shared AGENTS.md |
-| Claude Code | [Run the Explore subagent on Haiku](tips/explore-subagent-on-haiku.md) | Codebase searches running on your biggest model |
-| Claude Code | [.worktreeinclude and worktree.baseRef](tips/worktreeinclude-and-baseref.md) | New worktrees with no .env that start from main |
-| Any agent | [Surgical changes rule](tips/surgical-changes-rule.md) | 3-line fixes that come back as 300-line diffs |
-| MCP | [Bind local HTTP servers to 127.0.0.1](tips/mcp-http-bind-localhost.md) | Local MCP servers open to your whole network |
-| MCP | [Batch browser MCP form fills and return DOM deltas to cut replay tokens](tips/browser-mcp-batched-dom-deltas.md) | Multi-turn browser MCP form fills replay full ARIA trees each step, reaching 72,614 cumulative tokens |
-| Claude Code | [Cap 1M auto-compaction earlier when long sessions drive up token spend](tips/cap-1m-auto-compact-window.md) | On 1M-window models, waiting until ~967K tokens to compact pushes two thirds of spend into the tail |
-| Claude Code | [Block unfinished agent edits with Stop hook exit code 2 before PR review](tips/stop-hook-exit-2-pre-review-gates.md) | AI coding PRs are 154% larger and carry up to 2.74x more security flaws, stalling human code review |
-| MCP | [Lock down MCP servers with headersHelper, allowlists, and strict-mcp-config](tips/mcp-lockdown-headershelper-and-strict-config.md) | In MCPTox tests across 45 live MCP servers, hidden rules in tool descriptions reached 72.8% attack success |
-| Claude Code | [Bound headless agent loops with --max-turns and --max-budget-usd](tips/cap-headless-runs-with-max-turns.md) | Across 27,280 coding agent runs, step count drove inference cost while starting prompt size barely mattered |
+| Claude Code / Docker | [Inline API keys written by "Yes, and don't ask again"](tips/claude-local-settings-inline-secrets.md) | 31,088 GitHub secrets and 613 Docker Hub leaks from `.claude/settings.local.json` |
 | Claude Code | [Mirror sandbox denyRead rules in permissions.deny and disable unsandboxed retries](tips/sandbox-denyread-and-escape-hatch-lockdown.md) | `sandbox.filesystem.denyRead` blocks bash only, leaving built-in `Read` and unsandboxed retries open |
-| Python / Security | [Audit site-packages .pth startup hooks in coding-agent Python environments](tips/audit-python-pth-startup-hooks.md) | Compromised Python wheels (`agent-framework` 1.26.1/1.26.2) harvest keys via `.pth` hooks even without import |
-| Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 | Claude Code | [Enforce hard tool and approval gates instead of relying on prompt-injection filters](tips/gate-agent-actions-against-data-only-injection.md) | Prompt-injection detectors look for adversarial instructions inside tool results, not plausible numbers |
-| MCP | [Route all MCP stdio server logs to stderr so stdout carries JSON-RPC only](tips/mcp-stdio-route-logs-to-stderr.md) | In an MCP `stdio` server, all client-server traffic shares a single newline-delimited `stdout` pipe with no... |
+| Any agent | [Audit AI email connectors against indirect prompt injection](tips/audit-ai-email-connectors-against-indirect-prompt-injection.md) | Hidden instructions inside emails, calendar invites, or PDFs hijack connected OAuth tools (OWASP LLM01, CVE-2026-24301) |
+| Any agent | [Isolate coding-agent containers with --network none, --read-only, and seccomp](tips/isolate-agent-containers-network-seccomp-imds.md) | Local model weights do not isolate shell commands from host files, cloud metadata (`169.254.169.254`), or outbound exfiltration |
+| Python / Security | [Audit site-packages .pth startup hooks in coding-agent Python environments](tips/audit-python-pth-startup-hooks.md) | Compromised Python wheels (`agent-framework` 1.26.1/1.26.2) harvest keys via `.pth` hooks even without import |
 
-| Claude Code | [Audit MCP tools/list for credential exposure and avoid enableAllProjectMcpServers](tips/audit-mcp-tools-list-credential-exposure.md) | Teams often scan MCP servers only for hidden prompt-injection strings and stop there |
+### MCP Servers & Tool Interfaces
 
-| Any agent | [Isolate coding-agent containers with --network none, --read-only, and seccomp](tips/isolate-agent-containers-network-seccomp-imds.md) | Running an open-weight coding model on your own hardware controls where the weights live, not what shell co... |
+| Area | Fix | What it solves |
+|---|---|---|
+| MCP | [Bind local HTTP servers to 127.0.0.1](tips/mcp-http-bind-localhost.md) | Local MCP servers open to your whole network |
+| MCP | [Lock down MCP servers with headersHelper, allowlists, and strict-mcp-config](tips/mcp-lockdown-headershelper-and-strict-config.md) | In MCPTox tests across 45 live MCP servers, hidden rules in tool descriptions reached 72.8% attack success |
+| Claude Code / MCP | [Audit MCP tools/list for credential exposure and avoid enableAllProjectMcpServers](tips/audit-mcp-tools-list-credential-exposure.md) | Prompt-injection scans miss benign-looking MCP tools that request or touch credentials |
+| MCP | [Route all MCP stdio server logs to stderr so stdout carries JSON-RPC only](tips/mcp-stdio-route-logs-to-stderr.md) | Any non-JSON log line printed to `stdout` breaks newline-delimited MCP `stdio` framing |
+| MCP | [Batch browser MCP form fills and return DOM deltas to cut replay tokens](tips/browser-mcp-batched-dom-deltas.md) | Multi-turn browser MCP form fills replay full ARIA trees each step, reaching 72,614 cumulative tokens |
+| MCP | [Trim agent tool results to a 5-field allowlist to raise solve rate and cut token spend](tips/trim-agent-tool-results-field-allowlist.md) | Raw REST or MCP list JSON payloads flood context with URLs, avatars, and nested metadata |
 
-| MCP | [Trim agent tool results to a 5-field allowlist to raise solve rate and cut token spend](tips/trim-agent-tool-results-field-allowlist.md) | Returning raw REST or MCP JSON payloads from list tools floods the agent's context with URLs, avatar object... |
+### Cost, Context & Token Control
 
-| Any agent | [Audit AI email connectors against indirect prompt injection](tips/audit-ai-email-connectors-against-indirect-prompt-injection.md) | When you ask an AI assistant to summarize an email, calendar invite, or PDF, the model reads your prompt an... |
+| Area | Fix | What it solves |
+|---|---|---|
+| Claude Code | [Run the Explore subagent on Haiku](tips/explore-subagent-on-haiku.md) | Codebase searches running on your biggest model |
+| Claude Code | [Cap 1M auto-compaction earlier when long sessions drive up token spend](tips/cap-1m-auto-compact-window.md) | On 1M-window models, waiting until ~967K tokens to compact pushes two thirds of spend into the tail |
+| Claude Code | [Bound headless agent loops with --max-turns and --max-budget-usd](tips/cap-headless-runs-with-max-turns.md) | Across 27,280 coding agent runs, step count drove inference cost while starting prompt size barely mattered |
+
+### Workflow, Git & Prompt Hygiene
+
+| Area | Fix | What it solves |
+|---|---|---|
+| Claude Code | [AGENTS.md ignored when CLAUDE.local.md exists](tips/agents-md-ignored-with-claude-local-md.md) | A personal file silently turns off your shared `AGENTS.md` |
+| Claude / AGENTS.md | [Prompts claiming codebase ownership cause unrequested refactors](tips/codebase-ownership-causes-unrequested-refactors.md) | Ownership prompts raise unrequested code consolidation from under 10% to about 75% |
+| Any agent | [Surgical changes rule](tips/surgical-changes-rule.md) | 3-line fixes that come back as 300-line diffs |
+| Any agent | [Split coding-agent commits into prep and logic phases](tips/split-agent-commits-two-phases.md) | Oversized agent diffs that mix renames and formatting into feature logic |
+| Claude Code | [.worktreeinclude and worktree.baseRef](tips/worktreeinclude-and-baseref.md) | New worktrees with no `.env` that start from `main` |
+| Claude Code | [Block unfinished agent edits with Stop hook exit code 2 before PR review](tips/stop-hook-exit-2-pre-review-gates.md) | AI coding PRs are 154% larger and carry up to 2.74x more security flaws, stalling human code review |
+| Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 
 _Last checked: 2026-11-21_
 
 ## How each tip is written
 
 - One concrete problem, one copy-pasteable fix, and a link to the exact official doc or study lines that prove it.
-- Automated verification ([contributing guide](CONTRIBUTING.md)) checks quote accuracy and keeps every tip free of noise.
+- Automated verification ([contributing guide](CONTRIBUTING.md)) checks quote accuracy, table formatting, and auditor tests on every commit.
+
+## Running tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
 
 ## License
 

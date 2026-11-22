@@ -21,3 +21,7 @@ Add a scope rule to your root `CLAUDE.md` or `AGENTS.md`. It is adapted from the
 ## Source
 
 - https://github.com/forrestchang/andrej-karpathy-skills: "Touch only what you must. Clean up only your own mess."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

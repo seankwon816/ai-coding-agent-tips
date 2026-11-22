@@ -45,3 +45,7 @@ python3 scripts/audit_agent_configs.py .
 - https://www.anthropic.com/engineering/code-execution-with-mcp: "This reduces the token usage from 150,000 tokens to 2,000 tokens...a time and cost saving of 98.7%"
 - https://code.claude.com/docs/en/mcp: "set the server's `headersHelper` to a command. Claude Code runs it when connecting and merges its output into the headers it sends...Start the session with [`--strict-mcp-config`](https://code.claude.com/docs/en/cli-reference#cli-flags). Claude Code then loads the servers you pass with `--mcp-config`...To keep all of a server's tools behind tool search, set `\"alwaysLoad\": false` in that server's entry in your MCP configuration."
 - https://code.claude.com/docs/en/managed-mcp: "Deploy a fixed server set with `managed-mcp.json`...`allowedMcpServers`/`deniedMcpServers` for filtering what users configure."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

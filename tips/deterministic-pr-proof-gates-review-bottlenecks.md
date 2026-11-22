@@ -37,3 +37,7 @@ pytest tests/test_bugfix.py
 - https://arxiv.org/abs/2610.20394: "Escaped bugs are the dominant cost driver, and 61% of the agent budget goes to finding bugs. Agent capability matters more than token price, since higher-quality outputs reduce downstream quality assurance costs."
 - https://raw.githubusercontent.com/simplynadaf/ai-fix-verifier/main/README.md: "Deterministic Python decides. No model grades the model"
 - https://raw.githubusercontent.com/simplynadaf/ai-fix-verifier/main/README.md: "checks that no test was weakened, no function was deleted, nothing regressed, and that the fix is backed by a test which fails on the old code and passes on the new."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

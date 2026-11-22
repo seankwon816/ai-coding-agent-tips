@@ -27,3 +27,7 @@ To branch from your current work, set this in your settings. The only values are
 
 - https://code.claude.com/docs/en/worktrees: "A worktree is a fresh checkout, so untracked files like `.env` or `.env.local` from your main repository are not present. To copy them automatically when Claude creates a worktree, add a `.worktreeinclude` file to your project root."
 - https://code.claude.com/docs/en/worktrees: "You can't set `worktree.baseRef` to a branch name."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

@@ -25,3 +25,7 @@ Find the files and code the task needs. Use Read, Grep, and Glob. Return short f
 
 - https://code.claude.com/docs/en/sub-agents: "A user or project subagent named `Explore` overrides the built-in and keeps its own `model` field, so define one with `model: haiku` to run exploration on a lower-cost model."
 - https://code.claude.com/docs/en/sub-agents: "Tools: read-only tools; Write and Edit are denied"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

@@ -42,3 +42,7 @@ aws ec2 modify-instance-metadata-options \
 - https://docs.docker.com/reference/cli/docker/container/run/: "--network Connect a container to a network ... --read-only Mount the container's root filesystem as read only ... --cap-drop Drop Linux capabilities ... --security-opt Security Options"
 - https://docs.docker.com/engine/security/seccomp/: "unshare Deny cloning new namespaces for processes."
 - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html: "This applies only to HttpTokens and HttpPutResponseHopLimit"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

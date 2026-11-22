@@ -22,3 +22,7 @@ Make only the changes required to satisfy the user request.
 
 - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-2.md: "Leave the ownership sentence out where the user owns the code and wants it changed as little as possible"
 - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-2.md: "With this prompt, output tokens rose by about 70 to 80 percent and the model made changes nobody had asked for"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

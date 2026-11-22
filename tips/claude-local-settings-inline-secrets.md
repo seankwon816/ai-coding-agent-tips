@@ -35,3 +35,7 @@ python3 scripts/audit_agent_configs.py .
 - https://blog.gitguardian.com/claude-code-settings-local-json-secrets-docker-hub/: "31,088 secrets in Claude Code’s .claude/settings.local.json on public GitHub, 5,343 valid at detection, 23,276 repositories. 613 more in Docker Hub images, 99 valid."
 - https://code.claude.com/docs/en/permissions.md: "Claude Code saves the rule to .claude/settings.local.json at the root of the git repository"
 - https://code.claude.com/docs/en/settings.md: "Claude Code keeps it out of git when it creates the file; if you create it by hand, add it to .gitignore yourself"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

@@ -45,3 +45,7 @@ python3 scripts/audit_agent_configs.py .
 - https://code.claude.com/docs/en/best-practices: "a `Stop` hook runs your script whenever Claude tries to end its turn, and sends Claude back to work if the script exits with code 2."
 - https://code.claude.com/docs/en/hooks: "Exit code 1 without valid JSON output is a non-blocking error unless the hook is one whose failure blocks the action, even though 1 is the conventional Unix failure code. If your hook is meant to enforce a policy, use `exit 2`."
 - https://code.claude.com/docs/en/code-review-local: "Run `/code-review` in a Claude Code session to find bugs in your branch's changes"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

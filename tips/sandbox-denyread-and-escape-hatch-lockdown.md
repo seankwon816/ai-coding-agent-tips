@@ -52,3 +52,7 @@ python3 scripts/audit_agent_configs.py .
 - https://code.claude.com/docs/en/sandboxing: "commands that match excludedCommands run unsandboxed"
 - https://code.claude.com/docs/en/sandboxing: "Set the key in managed settings to keep a repository from changing it"
 - https://code.claude.com/docs/en/permissions: "with `Read(./project/**)` allowed and `Read(~/.ssh/**)` denied, a symlink at `./project/key` pointing to `~/.ssh/id_rsa` is blocked"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

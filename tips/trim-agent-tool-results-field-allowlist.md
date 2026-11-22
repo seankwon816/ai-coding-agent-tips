@@ -62,3 +62,7 @@ export function projectIssues(items: any[]): CompactIssue[] {
 - https://dev.to/aheadkit/i-trimmed-my-agents-tool-results-to-five-fields-it-solved-more-not-fewer-27d5: "Across both runs, the full results solved 9 of 24 jobs. The trimmed results solved 17 of 24. That is 37.5 percent against 70.8"
 - https://dev.to/aheadkit/i-trimmed-my-agents-tool-results-to-five-fields-it-solved-more-not-fewer-27d5: "The trimmed arm never needed a fourth turn on any job. Every job ended in three: list, one second look, answer."
 - https://dev.to/aheadkit/i-trimmed-my-agents-tool-results-to-five-fields-it-solved-more-not-fewer-27d5: "The average across the run is 1,421 tokens per turn against 673, and 5,475 per job against 2,020."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

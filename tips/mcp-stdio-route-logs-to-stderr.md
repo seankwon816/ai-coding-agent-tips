@@ -49,3 +49,7 @@ for idx, line in enumerate(proc.stdout.splitlines(), 1):
 
 - https://modelcontextprotocol.io/specification/latest/basic/transports/stdio: "The server reads JSON-RPC messages from `stdin` and writes JSON-RPC messages to `stdout`...Messages are delimited by newlines, and **MUST NOT** contain embedded newlines...The server **MAY** write UTF-8 strings to `stderr` for any logging purposes including informational, debug, and error messages...The server **MUST NOT** write anything to its `stdout` that is not a valid MCP message."
 - https://modelcontextprotocol.io/specification/latest/basic/transports/stdio: "The client reads server messages from `stdout`, one message per line. All messages share this single channel; there are no per-request streams."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

@@ -52,3 +52,7 @@ for item in hidden[:10]:
 - https://genai.owasp.org/llmrisk/llm01-prompt-injection/: "Implement human-in-the-loop controls for privileged operations to prevent unauthorized actions."
 - https://genai.owasp.org/llmrisk/llm01-prompt-injection/: "Separate and clearly denote untrusted content to limit its influence on user prompts."
 - https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2026-24301: "Improper neutralization of special elements used in a command ('Command Injection') in Microsoft Copilot allows an unauthorized attacker to disclose information over a network."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

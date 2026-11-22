@@ -21,3 +21,7 @@ Add a two-phase commit rule to your root `CLAUDE.md` or `AGENTS.md`:
 
 - https://arxiv.org/abs/2601.18341: "We leverage these traces to present the first large-scale study (128,018 projects) of the adoption of coding agents on GitHub"
 - https://arxiv.org/abs/2601.18341: "At the commit level, we find that commits assisted by coding agents are larger than commits only authored by human developers, and have a large proportion of features and bug fixes."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

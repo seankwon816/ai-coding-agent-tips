@@ -36,3 +36,7 @@ printf '%s\n%s\n' \
 - https://dev.to/serverdex/i-scanned-220000-mcp-tool-descriptions-for-prompt-injection-the-scare-is-overblown-but-1-in-4-6pk: "12,987 MCP servers that answer a credential-free handshake ... 220,226 tools in total ... Nearly one in four MCP servers has a tool that touches your secrets."
 - https://modelcontextprotocol.io/specification/latest/server/tools: "Servers that declare the tools capability MUST respond to tools/list requests with the set of tools currently available to the requesting client."
 - https://code.claude.com/docs/en/settings-reference: "Approve every MCP server defined in project .mcp.json files without a prompt. Claude Code writes this key to .claude/settings.local.json when you choose to approve all servers in the approval dialog."
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)

@@ -15,3 +15,7 @@
 ## Source
 
 - <official doc URL>: "<exact quote that backs the fix>"
+
+---
+
+[All verified fixes & 1-command config auditor](../README.md)
