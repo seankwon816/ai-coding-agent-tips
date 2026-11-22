@@ -7,4 +7,4 @@ Tips are welcome. To keep every tip trustworthy:
 3. Link the official doc or changelog line that backs it. No numbers you cannot source.
 4. No product or company plugs.
 
-Not sure it fits? Open a "Suggest a tip" issue first.
+Not sure it fits? Open a "Suggest a tip" issue first, or ask in the [Discord community](https://discord.gg/v5KFPkn4ux).

@@ -106,6 +106,10 @@ _Last checked: 2026-11-22_
 python3 -m unittest discover -s tests -v
 ```
 
+## Community
+
+Questions, edge cases, or new tip ideas: open a [GitHub Discussion](https://github.com/seankwon816/ai-coding-agent-tips/discussions), file an [Issue](https://github.com/seankwon816/ai-coding-agent-tips/issues), or join the [Discord community](https://discord.gg/v5KFPkn4ux).
+
 ## License
 
 MIT
