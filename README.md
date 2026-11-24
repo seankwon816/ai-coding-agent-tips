@@ -48,7 +48,7 @@ python3 scripts/audit_agent_configs.py .
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
 
-## Verified Field Fixes (25)
+## Verified Field Fixes (26)
 
 ### Security & Sandboxing
 
@@ -82,6 +82,7 @@ python3 scripts/audit_agent_configs.py .
 | Any agent | [Separate AI project memory with a three-layer setup](tips/separate-ai-project-memory-three-layer-setup.md) | Global AI memory loads into every conversation thread |
 | Any agent | [Pack three context blocks instead of polishing prompt wording](tips/pack-three-context-blocks-instead-of-polishing-prompts.md) | When an AI answer comes back generic or invents details, rewriting prompt adjectives ("act as a world-class... |
 | Claude Code | [Scope ANTHROPIC_API_KEY inline to spend monthly Claude API credits with claude -p](tips/scope-anthropic-api-key-inline-for-monthly-credits.md) | Monthly Claude API credits expire unused every billing cycle, while setting `ANTHROPIC_API_KEY` globally... |
+| Any agent | [Real AI agent vs. workflow: the 3-check architecture test](tips/real-ai-agent-vs-workflow-three-check-test.md) | Teams often label any multi-step prompt chain an "AI agent" and ship an unpredictable loop where a... |
 
 ### Workflow, Git & Prompt Hygiene
 
@@ -95,7 +96,7 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Block unfinished agent edits with Stop hook exit code 2 before PR review](tips/stop-hook-exit-2-pre-review-gates.md) | AI coding PRs are 154% larger and carry up to 2.74x more security flaws, stalling human code review |
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 
-_Last checked: 2026-11-23_
+_Last checked: 2026-11-24_
 
 ## How each tip is written
 
