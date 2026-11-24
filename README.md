@@ -48,7 +48,7 @@ python3 scripts/audit_agent_configs.py .
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
 
-## Verified Field Fixes (24)
+## Verified Field Fixes (25)
 
 ### Security & Sandboxing
 
@@ -81,6 +81,7 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Bound headless agent loops with --max-turns and --max-budget-usd](tips/cap-headless-runs-with-max-turns.md) | Across 27,280 coding agent runs, step count drove inference cost while starting prompt size barely mattered |
 | Any agent | [Separate AI project memory with a three-layer setup](tips/separate-ai-project-memory-three-layer-setup.md) | Global AI memory loads into every conversation thread |
 | Any agent | [Pack three context blocks instead of polishing prompt wording](tips/pack-three-context-blocks-instead-of-polishing-prompts.md) | When an AI answer comes back generic or invents details, rewriting prompt adjectives ("act as a world-class... |
+| Claude Code | [Scope ANTHROPIC_API_KEY inline to spend monthly Claude API credits with claude -p](tips/scope-anthropic-api-key-inline-for-monthly-credits.md) | Monthly Claude API credits expire unused every billing cycle, while setting `ANTHROPIC_API_KEY` globally... |
 
 ### Workflow, Git & Prompt Hygiene
 

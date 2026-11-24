@@ -11,6 +11,7 @@ Checks local project configuration files (read-only) for:
 7. Claude Code sandbox gaps: unmirrored filesystem.denyRead paths (bypassed by built-in Read), allowUnsandboxedCommands/excludedCommands escape hatches, and bypassPermissions defaults
 8. Blanket wildcard permissions.allow rules (Bash, Bash(*), WebFetch(*), mcp__*, *) that remove action approval gates
 9. Auto-approval of all project MCP servers (enableAllProjectMcpServers: true) without reviewing tools/list
+10. Persistent ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN inside .claude/settings*.json env (overrides subscription login)
 
 Usage:
   python3 scripts/audit_agent_configs.py [PATH] [--json]
@@ -376,6 +377,21 @@ def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
                         fix="Set enableAllProjectMcpServers to false (or remove it) and list vetted server names explicitly under enabledMcpjsonServers.",
                     )
                 )
+            env_cfg = parsed.get("env")
+            if isinstance(env_cfg, dict):
+                for env_key in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+                    raw_val = env_cfg.get(env_key)
+                    if isinstance(raw_val, str) and raw_val.strip():
+                        is_placeholder = bool(PLACEHOLDER_SECRET_RE.match(raw_val.strip()))
+                        findings.append(
+                            Finding(
+                                code="CLAUDE_SETTINGS_ENV_API_KEY",
+                                severity="MEDIUM" if is_placeholder else "HIGH",
+                                file=rel,
+                                summary=f"{rel} sets env.{env_key} persistently, which overrides interactive subscription login once approved and risks leaking an API key.",
+                                fix=f"Remove {env_key} from {rel} env and pass it inline only on standalone 'claude -p' commands.",
+                            )
+                        )
 
         hit_labels: list[str] = []
         redacted_examples: list[str] = []
