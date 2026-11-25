@@ -48,7 +48,7 @@ python3 scripts/audit_agent_configs.py .
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
 
-## Verified Field Fixes (26)
+## Verified Field Fixes (27)
 
 ### Security & Sandboxing
 
@@ -71,6 +71,7 @@ python3 scripts/audit_agent_configs.py .
 | MCP | [Route all MCP stdio server logs to stderr so stdout carries JSON-RPC only](tips/mcp-stdio-route-logs-to-stderr.md) | Any non-JSON log line printed to `stdout` breaks newline-delimited MCP `stdio` framing |
 | MCP | [Batch browser MCP form fills and return DOM deltas to cut replay tokens](tips/browser-mcp-batched-dom-deltas.md) | Multi-turn browser MCP form fills replay full ARIA trees each step, reaching 72,614 cumulative tokens |
 | MCP | [Trim agent tool results to a 5-field allowlist to raise solve rate and cut token spend](tips/trim-agent-tool-results-field-allowlist.md) | Raw REST or MCP list JSON payloads flood context with URLs, avatars, and nested metadata |
+| MCP | [Cut MCP tool overhead by 85% with three setup rules](tips/cut-mcp-tool-overhead-with-three-rules.md) | Connecting five or more MCP servers globally loads every server's full `tools/list` JSON schema into context... |
 
 ### Cost, Context & Token Control
 
@@ -96,7 +97,7 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Block unfinished agent edits with Stop hook exit code 2 before PR review](tips/stop-hook-exit-2-pre-review-gates.md) | AI coding PRs are 154% larger and carry up to 2.74x more security flaws, stalling human code review |
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 
-_Last checked: 2026-11-24_
+_Last checked: 2026-11-25_
 
 ## How each tip is written
 
