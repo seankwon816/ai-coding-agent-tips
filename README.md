@@ -51,7 +51,7 @@ python3 scripts/audit_agent_configs.py .
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
 
-## Verified Field Fixes (28)
+## Verified Field Fixes (29)
 
 ### Security & Sandboxing
 
@@ -87,6 +87,7 @@ python3 scripts/audit_agent_configs.py .
 | Any agent | [Separate AI project memory with a three-layer setup](tips/separate-ai-project-memory-three-layer-setup.md) | Global AI memory loads into every conversation thread |
 | Any agent | [Pack three context blocks instead of polishing prompt wording](tips/pack-three-context-blocks-instead-of-polishing-prompts.md) | Generic or invented answers come from missing facts, examples, and boundaries rather than weak prompt adjectives |
 | Claude Code | [Scope ANTHROPIC_API_KEY inline to spend monthly Claude API credits with claude -p](tips/scope-anthropic-api-key-inline-for-monthly-credits.md) | Monthly API credits expire unused while a global `ANTHROPIC_API_KEY` overrides your interactive subscription |
+| Any agent | [Cut AI input token bloat by 80% with clean Markdown](tips/convert-raw-html-and-pdfs-to-clean-markdown.md) | Pasting raw HTML web pages or uploading text-heavy PDFs directly into an AI coding agent burns most of your context window on layout noise instead of facts |
 
 ### Workflow, Git & Prompt Hygiene
 
@@ -101,7 +102,7 @@ python3 scripts/audit_agent_configs.py .
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 | Any agent | [Real AI agent vs. workflow: the 3-check architecture test](tips/real-ai-agent-vs-workflow-three-check-test.md) | Labeling a multi-step prompt chain an "agent" ships unpredictable loops where a fixed workflow is faster and safer |
 
-_Last checked: 2026-11-25_
+_Last checked: 2026-11-26_
 
 ## How each tip is written
 
