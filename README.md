@@ -20,7 +20,18 @@ Or run from a local clone:
 python3 scripts/audit_agent_configs.py .
 ```
 
-### Example output
+<details>
+<summary>What the auditor checks (19 built-in rules)</summary>
+
+- **Secrets & leak hygiene**: inline API keys/tokens in `.claude/settings*.json` and `.mcp.json` (redacted in output), `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` set inside `.claude/settings*.json` env blocks, missing `.claude/` in `.gitignore`, Dockerfile `COPY/ADD . .` without `.dockerignore` exclusions.
+- **Sandbox & approval gates**: `permissions.defaultMode: "bypassPermissions"`, blanket `permissions.allow` wildcards (`*`, `Bash(*)`, `WebFetch(*)`, `mcp__*`), `sandbox.filesystem.denyRead` not mirrored in `permissions.deny`, missing `allowUnsandboxedCommands: false`, broad `sandbox.excludedCommands`.
+- **MCP server safety**: `enableAllProjectMcpServers: true`, `0.0.0.0` wildcard bindings, unpinned `npx -y` packages without `@version`, wildcard `Skill(mcp__*)` allows, and MCP skill denials without `ReadMcpResourceTool` gating.
+- **Hooks, context & prompt hygiene**: blocking hooks using non-blocking `exit 1` instead of `exit 2`, out-of-range `autoCompactWindow` settings, `CLAUDE.local.md` shadowing `AGENTS.md` without `@AGENTS.md`, codebase-ownership phrasing that triggers unrequested refactors.
+
+</details>
+
+<details>
+<summary>Example output (4 findings)</summary>
 
 ```text
 [FAIL] Audited /path/to/your-project (4 finding(s))
@@ -33,14 +44,6 @@ python3 scripts/audit_agent_configs.py .
   - [MEDIUM] MCP_UNPINNED_NPX (.mcp.json): .mcp.json server 'docs' launches '@modelcontextprotocol/server-filesystem' via npx -y without a pinned @version.
     Fix: Pin exact package versions (pkg@1.2.3) or isolate sessions with managed-mcp.json and --strict-mcp-config.
 ```
-
-<details>
-<summary>What the auditor checks (16 built-in rules)</summary>
-
-- **Secrets & leak hygiene**: inline API keys/tokens in `.claude/settings*.json` and `.mcp.json` (redacted in output), missing `.claude/` in `.gitignore`, Dockerfile `COPY/ADD . .` without `.dockerignore` exclusions.
-- **Sandbox & approval gates**: `permissions.defaultMode: "bypassPermissions"`, blanket `permissions.allow` wildcards (`*`, `Bash(*)`, `WebFetch(*)`, `mcp__*`), `sandbox.filesystem.denyRead` not mirrored in `permissions.deny`, missing `allowUnsandboxedCommands: false`, broad `sandbox.excludedCommands`.
-- **MCP server safety**: `enableAllProjectMcpServers: true`, `0.0.0.0` wildcard bindings, unpinned `npx -y` packages without `@version`, wildcard `Skill(mcp__*)` allows, and MCP skill denials without `ReadMcpResourceTool` gating.
-- **Hooks, context & prompt hygiene**: blocking hooks using non-blocking `exit 1` instead of `exit 2`, out-of-range `autoCompactWindow` settings, `CLAUDE.local.md` shadowing `AGENTS.md` without `@AGENTS.md`, codebase-ownership phrasing that triggers unrequested refactors.
 
 </details>
 
@@ -71,7 +74,7 @@ python3 scripts/audit_agent_configs.py .
 | MCP | [Route all MCP stdio server logs to stderr so stdout carries JSON-RPC only](tips/mcp-stdio-route-logs-to-stderr.md) | Any non-JSON log line printed to `stdout` breaks newline-delimited MCP `stdio` framing |
 | MCP | [Batch browser MCP form fills and return DOM deltas to cut replay tokens](tips/browser-mcp-batched-dom-deltas.md) | Multi-turn browser MCP form fills replay full ARIA trees each step, reaching 72,614 cumulative tokens |
 | MCP | [Trim agent tool results to a 5-field allowlist to raise solve rate and cut token spend](tips/trim-agent-tool-results-field-allowlist.md) | Raw REST or MCP list JSON payloads flood context with URLs, avatars, and nested metadata |
-| MCP | [Cut MCP tool overhead by 85% with three setup rules](tips/cut-mcp-tool-overhead-with-three-rules.md) | Connecting five or more MCP servers globally loads every server's full `tools/list` JSON schema into context... |
+| MCP | [Cut MCP tool overhead by 85% with three setup rules](tips/cut-mcp-tool-overhead-with-three-rules.md) | Loading 5+ MCP servers globally injects ~72K-77K schema tokens upfront and drops tool selection accuracy to 49% |
 | Claude Code | [Gate both MCP skill loads and ReadMcpResourceTool for remote servers](tips/gate-mcp-skills-and-resources-read.md) | Denying MCP skills leaves raw `resources/read` open, and SEP-2640 SHA-256 digests are unsigned |
 
 ### Cost, Context & Token Control
@@ -82,9 +85,8 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [Cap 1M auto-compaction earlier when long sessions drive up token spend](tips/cap-1m-auto-compact-window.md) | On 1M-window models, waiting until ~967K tokens to compact pushes two thirds of spend into the tail |
 | Claude Code | [Bound headless agent loops with --max-turns and --max-budget-usd](tips/cap-headless-runs-with-max-turns.md) | Across 27,280 coding agent runs, step count drove inference cost while starting prompt size barely mattered |
 | Any agent | [Separate AI project memory with a three-layer setup](tips/separate-ai-project-memory-three-layer-setup.md) | Global AI memory loads into every conversation thread |
-| Any agent | [Pack three context blocks instead of polishing prompt wording](tips/pack-three-context-blocks-instead-of-polishing-prompts.md) | When an AI answer comes back generic or invents details, rewriting prompt adjectives ("act as a world-class... |
-| Claude Code | [Scope ANTHROPIC_API_KEY inline to spend monthly Claude API credits with claude -p](tips/scope-anthropic-api-key-inline-for-monthly-credits.md) | Monthly Claude API credits expire unused every billing cycle, while setting `ANTHROPIC_API_KEY` globally... |
-| Any agent | [Real AI agent vs. workflow: the 3-check architecture test](tips/real-ai-agent-vs-workflow-three-check-test.md) | Teams often label any multi-step prompt chain an "AI agent" and ship an unpredictable loop where a... |
+| Any agent | [Pack three context blocks instead of polishing prompt wording](tips/pack-three-context-blocks-instead-of-polishing-prompts.md) | Generic or invented answers come from missing facts, examples, and boundaries rather than weak prompt adjectives |
+| Claude Code | [Scope ANTHROPIC_API_KEY inline to spend monthly Claude API credits with claude -p](tips/scope-anthropic-api-key-inline-for-monthly-credits.md) | Monthly API credits expire unused while a global `ANTHROPIC_API_KEY` overrides your interactive subscription |
 
 ### Workflow, Git & Prompt Hygiene
 
@@ -97,13 +99,14 @@ python3 scripts/audit_agent_configs.py .
 | Claude Code | [.worktreeinclude and worktree.baseRef](tips/worktreeinclude-and-baseref.md) | New worktrees with no `.env` that start from `main` |
 | Claude Code | [Block unfinished agent edits with Stop hook exit code 2 before PR review](tips/stop-hook-exit-2-pre-review-gates.md) | AI coding PRs are 154% larger and carry up to 2.74x more security flaws, stalling human code review |
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
+| Any agent | [Real AI agent vs. workflow: the 3-check architecture test](tips/real-ai-agent-vs-workflow-three-check-test.md) | Labeling a multi-step prompt chain an "agent" ships unpredictable loops where a fixed workflow is faster and safer |
 
 _Last checked: 2026-11-25_
 
 ## How each tip is written
 
 - One concrete problem, one copy-pasteable fix, and a link to the exact official doc or study lines that prove it.
-- Automated verification ([contributing guide](CONTRIBUTING.md)) checks quote accuracy, table formatting, and auditor tests on every commit.
+- Automated verification ([contributing guide](CONTRIBUTING.md)) checks quote accuracy, rule count sync, table formatting, and auditor tests on every commit.
 
 ## Running tests
 
