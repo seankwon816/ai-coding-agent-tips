@@ -70,6 +70,8 @@ BROAD_ALLOW_WILDCARD_RE = re.compile(
     r"^(?:\*|Bash(?:\((?:\*|\*:\*|:\*)\))?|WebFetch(?:\((?:\*|domain:\*)\))?|mcp__\*+(?:__\*+)?)$"
 )
 PLACEHOLDER_SECRET_RE = re.compile(r"^(?:\$\{[^}]+\}|\$[A-Z0-9_]+|<[^>]+>|(?:YOUR|REPLACE|EXAMPLE|DUMMY|TEST)[-_A-Z0-9]*|x{4,})$", re.I)
+MCP_SKILL_RULE_RE = re.compile(r"^Skill\(mcp__[^)]+\)$")
+MCP_SKILL_WILDCARD_RE = re.compile(r"^Skill\(mcp__[^)]*\*[^)]*\)$")
 
 
 @dataclass
@@ -345,6 +347,55 @@ def _check_claude_sandbox(rel: str, parsed: dict[str, object], findings: list[Fi
         )
 
 
+def _has_read_mcp_resource_gate(rules: list[str]) -> bool:
+    for rule in rules:
+        s = rule.strip()
+        if s == "ReadMcpResourceTool" or s.startswith("ReadMcpResourceTool("):
+            return True
+    return False
+
+
+def _check_mcp_skills_controls(rel: str, parsed: dict[str, object], findings: list[Finding]) -> None:
+    perms = parsed.get("permissions")
+    allow_rules: list[str] = []
+    ask_rules: list[str] = []
+    deny_rules: list[str] = []
+    if isinstance(perms, dict):
+        if isinstance(perms.get("allow"), list):
+            allow_rules = [r.strip() for r in perms["allow"] if isinstance(r, str)]
+        if isinstance(perms.get("ask"), list):
+            ask_rules = [r.strip() for r in perms["ask"] if isinstance(r, str)]
+        if isinstance(perms.get("deny"), list):
+            deny_rules = [r.strip() for r in perms["deny"] if isinstance(r, str)]
+
+    broad_skill_allows = [r for r in allow_rules if MCP_SKILL_WILDCARD_RE.match(r)]
+    if broad_skill_allows:
+        preview = ", ".join(dict.fromkeys(broad_skill_allows[:4]))
+        findings.append(
+            Finding(
+                code="MCP_SKILLS_BROAD_ALLOW",
+                severity="HIGH",
+                file=rel,
+                summary=f"{rel} pre-approves wildcard remote MCP skills ({preview}) even though SEP-2640 digests are unsigned and direct servers skip scanning.",
+                fix="Move remote MCP skill wildcards from permissions.allow to permissions.ask (or pin explicit skill names).",
+            )
+        )
+
+    skill_denies = [r for r in deny_rules if MCP_SKILL_RULE_RE.match(r)]
+    disables_direct = parsed.get("disableDirectMcpSkills") is True
+    if (disables_direct or skill_denies) and not _has_read_mcp_resource_gate(deny_rules + ask_rules):
+        trigger = "disableDirectMcpSkills=true" if disables_direct else ", ".join(dict.fromkeys(skill_denies[:3]))
+        findings.append(
+            Finding(
+                code="MCP_SKILLS_DENY_WITHOUT_RESOURCE_DENY",
+                severity="MEDIUM",
+                file=rel,
+                summary=f"{rel} restricts MCP skills ({trigger}) without gating ReadMcpResourceTool, leaving normal MCP resources/read calls open.",
+                fix="Add 'ReadMcpResourceTool' to permissions.deny (or permissions.ask) alongside skill controls if you want to block raw MCP resource reads.",
+            )
+        )
+
+
 def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
     for rel in (".claude/settings.local.json", ".claude/settings.json"):
         cfg_path = root / rel
@@ -367,6 +418,7 @@ def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
             _check_claude_hooks(rel, parsed, findings)
             _check_claude_compact_window(rel, parsed, findings)
             _check_claude_sandbox(rel, parsed, findings)
+            _check_mcp_skills_controls(rel, parsed, findings)
             if parsed.get("enableAllProjectMcpServers") is True:
                 findings.append(
                     Finding(

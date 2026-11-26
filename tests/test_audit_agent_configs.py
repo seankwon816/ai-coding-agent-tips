@@ -212,6 +212,50 @@ class AuditAgentConfigsTest(unittest.TestCase):
         res = self._audit(setup)
         self.assertIn("CLAUDE_SETTINGS_ENV_API_KEY", self._codes(res))
 
+    def test_mcp_skills_broad_allow_and_missing_resource_deny_flagged(self) -> None:
+        def setup(root: Path) -> None:
+            (root / ".claude").mkdir()
+            (root / ".gitignore").write_text(".claude/\n", encoding="utf-8")
+            (root / ".claude" / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "disableDirectMcpSkills": True,
+                        "permissions": {
+                            "allow": ["Skill(mcp__docs__*)"],
+                            "deny": ["Skill(mcp__untrusted__*)"],
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+        res = self._audit(setup)
+        codes = self._codes(res)
+        self.assertIn("MCP_SKILLS_BROAD_ALLOW", codes)
+        self.assertIn("MCP_SKILLS_DENY_WITHOUT_RESOURCE_DENY", codes)
+
+    def test_mcp_skills_deny_with_read_mcp_resource_tool_passes(self) -> None:
+        def setup(root: Path) -> None:
+            (root / ".claude").mkdir()
+            (root / ".gitignore").write_text(".claude/\n", encoding="utf-8")
+            (root / ".claude" / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "disableDirectMcpSkills": True,
+                        "permissions": {
+                            "ask": ["Skill(mcp__docs__*)"],
+                            "deny": ["ReadMcpResourceTool"],
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+        res = self._audit(setup)
+        codes = self._codes(res)
+        self.assertNotIn("MCP_SKILLS_BROAD_ALLOW", codes)
+        self.assertNotIn("MCP_SKILLS_DENY_WITHOUT_RESOURCE_DENY", codes)
+
     def test_cli_json_mode_and_exit_codes(self) -> None:
         proc = subprocess.run(
             [sys.executable, str(SCRIPT_PATH), "--json", str(REPO_ROOT)],

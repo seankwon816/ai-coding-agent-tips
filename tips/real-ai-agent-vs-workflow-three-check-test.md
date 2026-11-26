@@ -40,7 +40,7 @@ Score your design before writing code:
 
 - https://www.anthropic.com/research/building-effective-agents: "Workflows are systems where LLMs and tools are orchestrated through predefined code paths."
 - https://openai.github.io/openai-agents-python/running_agents/: "If the LLM produces tool calls, we run those tool calls, append the results, and re-run the loop. If we exceed the max_turns passed, we raise a MaxTurnsExceeded exception."
-- https://web.archive.org/web/20261116065652/https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027: "Gartner estimates only about 130 of the thousands of agentic AI vendors are real. ... Gartner Predicts Over 40% of Agentic AI Projects Will Be Canceled by End of 2027"
+- https://web.archive.org/web/20250629125109/https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027: "Gartner estimates only about 130 of the thousands of agentic AI vendors are real. ... Gartner Predicts Over 40% of Agentic AI Projects Will Be Canceled by End of 2027"
 
 ---
 

@@ -39,7 +39,7 @@ python3 scripts/audit_agent_configs.py .
 
 - **Secrets & leak hygiene**: inline API keys/tokens in `.claude/settings*.json` and `.mcp.json` (redacted in output), missing `.claude/` in `.gitignore`, Dockerfile `COPY/ADD . .` without `.dockerignore` exclusions.
 - **Sandbox & approval gates**: `permissions.defaultMode: "bypassPermissions"`, blanket `permissions.allow` wildcards (`*`, `Bash(*)`, `WebFetch(*)`, `mcp__*`), `sandbox.filesystem.denyRead` not mirrored in `permissions.deny`, missing `allowUnsandboxedCommands: false`, broad `sandbox.excludedCommands`.
-- **MCP server safety**: `enableAllProjectMcpServers: true`, `0.0.0.0` wildcard bindings, unpinned `npx -y` packages without `@version`.
+- **MCP server safety**: `enableAllProjectMcpServers: true`, `0.0.0.0` wildcard bindings, unpinned `npx -y` packages without `@version`, wildcard `Skill(mcp__*)` allows, and MCP skill denials without `ReadMcpResourceTool` gating.
 - **Hooks, context & prompt hygiene**: blocking hooks using non-blocking `exit 1` instead of `exit 2`, out-of-range `autoCompactWindow` settings, `CLAUDE.local.md` shadowing `AGENTS.md` without `@AGENTS.md`, codebase-ownership phrasing that triggers unrequested refactors.
 
 </details>
@@ -48,7 +48,7 @@ python3 scripts/audit_agent_configs.py .
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
 
-## Verified Field Fixes (27)
+## Verified Field Fixes (28)
 
 ### Security & Sandboxing
 
@@ -72,6 +72,7 @@ python3 scripts/audit_agent_configs.py .
 | MCP | [Batch browser MCP form fills and return DOM deltas to cut replay tokens](tips/browser-mcp-batched-dom-deltas.md) | Multi-turn browser MCP form fills replay full ARIA trees each step, reaching 72,614 cumulative tokens |
 | MCP | [Trim agent tool results to a 5-field allowlist to raise solve rate and cut token spend](tips/trim-agent-tool-results-field-allowlist.md) | Raw REST or MCP list JSON payloads flood context with URLs, avatars, and nested metadata |
 | MCP | [Cut MCP tool overhead by 85% with three setup rules](tips/cut-mcp-tool-overhead-with-three-rules.md) | Connecting five or more MCP servers globally loads every server's full `tools/list` JSON schema into context... |
+| Claude Code | [Gate both MCP skill loads and ReadMcpResourceTool for remote servers](tips/gate-mcp-skills-and-resources-read.md) | Denying MCP skills leaves raw `resources/read` open, and SEP-2640 SHA-256 digests are unsigned |
 
 ### Cost, Context & Token Control
 
