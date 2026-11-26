@@ -37,7 +37,7 @@ echo "${MAX_MCP_OUTPUT_TOKENS:-25000}"
 - https://raw.githubusercontent.com/Tthanh2k6/turbo-browser-mcp/main/README.md: "11 turns, 12,197 tok direct, 72,614 cumulative | 1 turn, 811 tok | 93.4% direct, 98.9% cumulative"
 - https://raw.githubusercontent.com/Tthanh2k6/turbo-browser-mcp/main/README.md: "12,825 chars full ARIA (3,582 tok) | 168 chars (56 tok) | 98.4% vs ARIA"
 - https://raw.githubusercontent.com/Tthanh2k6/turbo-browser-mcp/main/README.md: "65,679 chars (44,728 tok) as Base64 | 263 chars (85 tok) disk path | 99.8%"
-- https://raw.githubusercontent.com/Tthanh2k6/turbo-browser-mcp/main/README.md: "Buttons that look like a final commit (Submit, Send, Publish, Pay, Confirm, and their Korean, Japanese, Chinese and Vietnamese equivalents) are blocked by default, so an agent can prefill a form and leave the last click to a person."
+- https://raw.githubusercontent.com/Tthanh2k6/turbo-browser-mcp/main/README.md: "final Submit clicks are blocked by default."
 
 ---
 
