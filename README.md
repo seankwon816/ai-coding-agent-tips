@@ -77,7 +77,7 @@ python3 scripts/audit_agent_configs.py .
 | [Cost, Context & Token Control](#cost-context--token-control) | 7 | Model routing, compaction thresholds, loop caps, memory layering, Markdown cleanup |
 | [Workflow, Git & Prompt Hygiene](#workflow-git--prompt-hygiene) | 8 | `AGENTS.md` precedence, minimal diffs, two-phase commits, Stop hooks, PR proof gates |
 
-## Verified Field Fixes (29)
+## Verified Field Fixes (30)
 
 ### Security & Sandboxing
 
@@ -89,6 +89,7 @@ python3 scripts/audit_agent_configs.py .
 | Any agent | [Audit AI email connectors against indirect prompt injection](tips/audit-ai-email-connectors-against-indirect-prompt-injection.md) | Hidden instructions inside emails, calendar invites, or PDFs hijack connected OAuth tools (OWASP LLM01, CVE-2026-24301) |
 | Any agent | [Isolate coding-agent containers with --network none, --read-only, and seccomp](tips/isolate-agent-containers-network-seccomp-imds.md) | Local model weights do not isolate shell commands from host files, cloud metadata (`169.254.169.254`), or outbound exfiltration |
 | Python / Security | [Audit site-packages .pth startup hooks in coding-agent Python environments](tips/audit-python-pth-startup-hooks.md) | Compromised Python wheels (`agent-framework` 1.26.1/1.26.2) harvest keys via `.pth` hooks even without import |
+| Claude Code | [Verify AI-generated code with three pre-merge gates](tips/verify-ai-generated-code-with-three-gates.md) | AI coding agents often produce code that compiles cleanly yet ships security defects or quiet structural bloat |
 
 ### MCP Servers & Tool Interfaces
 
@@ -128,7 +129,7 @@ python3 scripts/audit_agent_configs.py .
 | Any agent | [Put a deterministic fail-before-fix proof gate ahead of human PR review](tips/deterministic-pr-proof-gates-review-bottlenecks.md) | 655-firm and 500k-dev studies show code review stalls and releases lag when vacuous agent PRs pass green CI |
 | Any agent | [Real AI agent vs. workflow: the 3-check architecture test](tips/real-ai-agent-vs-workflow-three-check-test.md) | Labeling a multi-step prompt chain an "agent" ships unpredictable loops where a fixed workflow is faster and safer |
 
-_Last checked: 2026-11-26_
+_Last checked: 2026-11-27_
 
 ## How each tip is written
 
