@@ -1,14 +1,31 @@
+<div align="center">
+
 # AI Coding Agent Tips & Config Auditor
+
+**Zero-dependency local security auditor, drop-in `AGENTS.md` / `CLAUDE.md` rules, and doc-verified fixes for Claude Code, OpenAI Codex CLI, Cursor, and MCP servers.**
 
 [![CI](https://github.com/seankwon816/ai-coding-agent-tips/actions/workflows/ci.yml/badge.svg)](https://github.com/seankwon816/ai-coding-agent-tips/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3 stdlib](https://img.shields.io/badge/Python-3.10%2B%20stdlib%20only-3776AB.svg)](scripts/audit_agent_configs.py)
+[![Verified Fixes](https://img.shields.io/badge/Verified_Fixes-29-059669.svg)](#verified-field-fixes-29)
 
-Zero-dependency local security auditor, drop-in `AGENTS.md` / `CLAUDE.md` rules, and doc-verified fixes for Claude Code, OpenAI Codex CLI, Cursor, and MCP servers. Every fix is verified word-for-word against official documentation or published studies.
+[1-Command Audit](#1-command-local-audit-python-3-stdlib-read-only) · [Starter Rules](#drop-in-starter-rules) · [Browse by Topic](#browse-by-topic) · [All 29 Fixes](#verified-field-fixes-29) · [Tests](#running-tests) · [Community](#community)
+
+</div>
+
+---
+
+Every fix in this repository is checked word-for-word against official documentation or published studies, with copy-pasteable configs and automated integrity tests on every commit.
+
+## Start in 3 Steps
+
+1. **Audit your repo locally (read-only, zero installs):** Run the single Python command below to catch leaked inline keys, unsafe sandbox settings, and broken hooks.
+2. **Add baseline agent rules:** Copy [`rules/AGENTS.minimal-diffs.md`](rules/AGENTS.minimal-diffs.md) into your `AGENTS.md` or `CLAUDE.md`.
+3. **Apply targeted fixes:** Pick the category you need from the topic index below.
 
 ## 1-Command Local Audit (Python 3 stdlib, read-only)
 
-Run directly against any repository (zero installs, `exit 0` when clean, `1` when findings exist; supports `--json`):
+Run directly against any repository (`exit 0` when clean, `1` when findings exist; supports `--json` for CI):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/seankwon816/ai-coding-agent-tips/main/scripts/audit_agent_configs.py | python3 - .
@@ -50,6 +67,15 @@ python3 scripts/audit_agent_configs.py .
 ## Drop-In Starter Rules
 
 - **[rules/AGENTS.minimal-diffs.md](rules/AGENTS.minimal-diffs.md)**: Ready-to-paste `AGENTS.md` / `CLAUDE.md` rules for surgical diffs, two-phase commits, `$ENV_VAR` command safety, and ignore hygiene.
+
+## Browse by Topic
+
+| Category | Fixes | Focus |
+| --- | --- | --- |
+| [Security & Sandboxing](#security--sandboxing) | 6 | Inline secrets, sandbox gaps, prompt-injection gates, container isolation, `.pth` hooks |
+| [MCP Servers & Tool Interfaces](#mcp-servers--tool-interfaces) | 8 | Localhost binding, tool poisoning, stdio logs, payload allowlists, schema overhead |
+| [Cost, Context & Token Control](#cost-context--token-control) | 7 | Model routing, compaction thresholds, loop caps, memory layering, Markdown cleanup |
+| [Workflow, Git & Prompt Hygiene](#workflow-git--prompt-hygiene) | 8 | `AGENTS.md` precedence, minimal diffs, two-phase commits, Stop hooks, PR proof gates |
 
 ## Verified Field Fixes (29)
 
