@@ -256,6 +256,53 @@ class AuditAgentConfigsTest(unittest.TestCase):
         self.assertNotIn("MCP_SKILLS_BROAD_ALLOW", codes)
         self.assertNotIn("MCP_SKILLS_DENY_WITHOUT_RESOURCE_DENY", codes)
 
+
+    def test_prompt_cache_ttl_invalid_conflict_and_disabled_flagged(self) -> None:
+        def setup(root: Path) -> None:
+            (root / ".claude").mkdir()
+            (root / ".gitignore").write_text(".claude/\n", encoding="utf-8")
+            (root / ".claude" / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "promptCacheTtl": "60m",
+                        "subagentPromptCacheTtl": "1h",
+                        "env": {
+                            "CLAUDE_CODE_PROMPT_CACHE_TTL": "3600",
+                            "FORCE_PROMPT_CACHING_5M": "1",
+                            "DISABLE_PROMPT_CACHING": "1",
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+        res = self._audit(setup)
+        codes = self._codes(res)
+        self.assertIn("INVALID_PROMPT_CACHE_TTL", codes)
+        self.assertIn("PROMPT_CACHING_DISABLED", codes)
+
+    def test_prompt_cache_ttl_valid_values_pass(self) -> None:
+        def setup(root: Path) -> None:
+            (root / ".claude").mkdir()
+            (root / ".gitignore").write_text(".claude/\n", encoding="utf-8")
+            (root / ".claude" / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "promptCacheTtl": "1h",
+                        "subagentPromptCacheTtl": "5m",
+                        "env": {
+                            "CLAUDE_CODE_PROMPT_CACHE_TTL": "1h",
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+        res = self._audit(setup)
+        codes = self._codes(res)
+        self.assertNotIn("INVALID_PROMPT_CACHE_TTL", codes)
+        self.assertNotIn("PROMPT_CACHING_DISABLED", codes)
+
     def test_cli_json_mode_and_exit_codes(self) -> None:
         proc = subprocess.run(
             [sys.executable, str(SCRIPT_PATH), "--json", str(REPO_ROOT)],

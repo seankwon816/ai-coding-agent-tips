@@ -7,9 +7,9 @@
 [![CI](https://github.com/seankwon816/ai-coding-agent-tips/actions/workflows/ci.yml/badge.svg)](https://github.com/seankwon816/ai-coding-agent-tips/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3 stdlib](https://img.shields.io/badge/Python-3.10%2B%20stdlib%20only-3776AB.svg)](scripts/audit_agent_configs.py)
-[![Verified Fixes](https://img.shields.io/badge/Verified_Fixes-29-059669.svg)](#verified-field-fixes-29)
+[![Verified Fixes](https://img.shields.io/badge/Verified_Fixes-31-059669.svg)](#verified-field-fixes-31)
 
-[1-Command Audit](#1-command-local-audit-python-3-stdlib-read-only) · [Starter Rules](#drop-in-starter-rules) · [Browse by Topic](#browse-by-topic) · [All 29 Fixes](#verified-field-fixes-29) · [Tests](#running-tests) · [Community](#community)
+[1-Command Audit](#1-command-local-audit-python-3-stdlib-read-only) · [Starter Rules](#drop-in-starter-rules) · [Browse by Topic](#browse-by-topic) · [All 31 Fixes](#verified-field-fixes-31) · [Tests](#running-tests) · [Community](#community)
 
 </div>
 
@@ -38,12 +38,12 @@ python3 scripts/audit_agent_configs.py .
 ```
 
 <details>
-<summary>What the auditor checks (19 built-in rules)</summary>
+<summary>What the auditor checks (21 built-in rules)</summary>
 
 - **Secrets & leak hygiene**: inline API keys/tokens in `.claude/settings*.json` and `.mcp.json` (redacted in output), `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` set inside `.claude/settings*.json` env blocks, missing `.claude/` in `.gitignore`, Dockerfile `COPY/ADD . .` without `.dockerignore` exclusions.
 - **Sandbox & approval gates**: `permissions.defaultMode: "bypassPermissions"`, blanket `permissions.allow` wildcards (`*`, `Bash(*)`, `WebFetch(*)`, `mcp__*`), `sandbox.filesystem.denyRead` not mirrored in `permissions.deny`, missing `allowUnsandboxedCommands: false`, broad `sandbox.excludedCommands`.
 - **MCP server safety**: `enableAllProjectMcpServers: true`, `0.0.0.0` wildcard bindings, unpinned `npx -y` packages without `@version`, wildcard `Skill(mcp__*)` allows, and MCP skill denials without `ReadMcpResourceTool` gating.
-- **Hooks, context & prompt hygiene**: blocking hooks using non-blocking `exit 1` instead of `exit 2`, out-of-range `autoCompactWindow` settings, `CLAUDE.local.md` shadowing `AGENTS.md` without `@AGENTS.md`, codebase-ownership phrasing that triggers unrequested refactors.
+- **Hooks, context & prompt hygiene**: blocking hooks using non-blocking `exit 1` instead of `exit 2`, out-of-range `autoCompactWindow` settings, invalid/overridden `promptCacheTtl` or `DISABLE_PROMPT_CACHING` flags, `CLAUDE.local.md` shadowing `AGENTS.md` without `@AGENTS.md`, codebase-ownership phrasing that triggers unrequested refactors.
 
 </details>
 
@@ -72,12 +72,12 @@ python3 scripts/audit_agent_configs.py .
 
 | Category | Fixes | Focus |
 | --- | --- | --- |
-| [Security & Sandboxing](#security--sandboxing) | 6 | Inline secrets, sandbox gaps, prompt-injection gates, container isolation, `.pth` hooks |
+| [Security & Sandboxing](#security--sandboxing) | 7 | Inline secrets, sandbox gaps, prompt-injection gates, container isolation, `.pth` hooks |
 | [MCP Servers & Tool Interfaces](#mcp-servers--tool-interfaces) | 8 | Localhost binding, tool poisoning, stdio logs, payload allowlists, schema overhead |
-| [Cost, Context & Token Control](#cost-context--token-control) | 7 | Model routing, compaction thresholds, loop caps, memory layering, Markdown cleanup |
+| [Cost, Context & Token Control](#cost-context--token-control) | 8 | Model routing, compaction thresholds, loop caps, memory layering, Markdown cleanup |
 | [Workflow, Git & Prompt Hygiene](#workflow-git--prompt-hygiene) | 8 | `AGENTS.md` precedence, minimal diffs, two-phase commits, Stop hooks, PR proof gates |
 
-## Verified Field Fixes (30)
+## Verified Field Fixes (31)
 
 ### Security & Sandboxing
 
@@ -115,6 +115,7 @@ python3 scripts/audit_agent_configs.py .
 | Any agent | [Pack three context blocks instead of polishing prompt wording](tips/pack-three-context-blocks-instead-of-polishing-prompts.md) | Generic or invented answers come from missing facts, examples, and boundaries rather than weak prompt adjectives |
 | Claude Code | [Scope ANTHROPIC_API_KEY inline to spend monthly Claude API credits with claude -p](tips/scope-anthropic-api-key-inline-for-monthly-credits.md) | Monthly API credits expire unused while a global `ANTHROPIC_API_KEY` overrides your interactive subscription |
 | Any agent | [Cut AI input token bloat by 80% with clean Markdown](tips/convert-raw-html-and-pdfs-to-clean-markdown.md) | Pasting raw HTML web pages or uploading text-heavy PDFs directly into an AI coding agent burns most of your context window on layout noise instead of facts |
+| Claude Code | [Pin Claude Code promptCacheTtl to 1h when sessions spill into usage credits](tips/pin-claude-code-prompt-cache-ttl-for-usage-credits.md) | Subscription overage credits and subagents drop Claude Code prompt cache TTL from 1h to 5m, triggering cold uncached rebuilds after short breaks |
 
 ### Workflow, Git & Prompt Hygiene
 

@@ -229,6 +229,92 @@ def _check_claude_compact_window(rel: str, parsed: dict[str, object], findings: 
             )
 
 
+
+VALID_PROMPT_CACHE_TTLS = {"5m", "1h"}
+DISABLE_PROMPT_CACHING_ENV_KEYS = (
+    "DISABLE_PROMPT_CACHING",
+    "DISABLE_PROMPT_CACHING_HAIKU",
+    "DISABLE_PROMPT_CACHING_SONNET",
+    "DISABLE_PROMPT_CACHING_OPUS",
+    "DISABLE_PROMPT_CACHING_FABLE",
+)
+
+
+def _is_truthy_env_flag(val: object) -> bool:
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, int):
+        return val == 1
+    if isinstance(val, str):
+        return val.strip().lower() in {"1", "true", "yes"}
+    return False
+
+
+def _check_claude_prompt_cache(rel: str, parsed: dict[str, object], findings: list[Finding]) -> None:
+    for key in ("promptCacheTtl", "subagentPromptCacheTtl"):
+        if key in parsed:
+            val = parsed[key]
+            if not isinstance(val, str) or val not in VALID_PROMPT_CACHE_TTLS:
+                findings.append(
+                    Finding(
+                        code="INVALID_PROMPT_CACHE_TTL",
+                        severity="MEDIUM",
+                        file=rel,
+                        summary=f"{key}={val!r} is ignored by Claude Code; only '5m' or '1h' is accepted.",
+                        fix=f"Set {key} to '1h' or '5m' (or remove the key to keep defaults).",
+                    )
+                )
+
+    env_cfg = parsed.get("env")
+    if not isinstance(env_cfg, dict):
+        return
+
+    for env_key in ("CLAUDE_CODE_PROMPT_CACHE_TTL", "CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL"):
+        if env_key in env_cfg:
+            raw_val = env_cfg[env_key]
+            if not isinstance(raw_val, str) or raw_val not in VALID_PROMPT_CACHE_TTLS:
+                findings.append(
+                    Finding(
+                        code="INVALID_PROMPT_CACHE_TTL",
+                        severity="MEDIUM",
+                        file=rel,
+                        summary=f"env.{env_key}={raw_val!r} is ignored by Claude Code; only '5m' or '1h' is accepted.",
+                        fix=f"Set env.{env_key} to '1h' or '5m' (or remove it).",
+                    )
+                )
+
+    force_5m = _is_truthy_env_flag(env_cfg.get("FORCE_PROMPT_CACHING_5M"))
+    wants_1h = (
+        parsed.get("promptCacheTtl") == "1h"
+        or parsed.get("subagentPromptCacheTtl") == "1h"
+        or env_cfg.get("CLAUDE_CODE_PROMPT_CACHE_TTL") == "1h"
+        or env_cfg.get("CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL") == "1h"
+        or _is_truthy_env_flag(env_cfg.get("ENABLE_PROMPT_CACHING_1H"))
+    )
+    if force_5m and wants_1h:
+        findings.append(
+            Finding(
+                code="INVALID_PROMPT_CACHE_TTL",
+                severity="MEDIUM",
+                file=rel,
+                summary="env.FORCE_PROMPT_CACHING_5M=1 takes highest precedence and silently overrides your 1h prompt cache TTL setting for both buckets.",
+                fix="Remove FORCE_PROMPT_CACHING_5M from env after debugging so your 1h promptCacheTtl setting takes effect.",
+            )
+        )
+
+    for disable_key in DISABLE_PROMPT_CACHING_ENV_KEYS:
+        if _is_truthy_env_flag(env_cfg.get(disable_key)):
+            findings.append(
+                Finding(
+                    code="PROMPT_CACHING_DISABLED",
+                    severity="MEDIUM",
+                    file=rel,
+                    summary=f"{rel} sets env.{disable_key}=1, disabling prompt caching and billing full uncached input on every turn.",
+                    fix=f"Remove {disable_key} from {rel} env once debugging is complete.",
+                )
+            )
+
+
 def _normalize_deny_path(raw: str) -> str:
     p = raw.strip()
     for suffix in ("/**", "/*", "/"):
@@ -417,6 +503,7 @@ def _check_claude_settings(root: Path, findings: list[Finding]) -> None:
         if isinstance(parsed, dict):
             _check_claude_hooks(rel, parsed, findings)
             _check_claude_compact_window(rel, parsed, findings)
+            _check_claude_prompt_cache(rel, parsed, findings)
             _check_claude_sandbox(rel, parsed, findings)
             _check_mcp_skills_controls(rel, parsed, findings)
             if parsed.get("enableAllProjectMcpServers") is True:
